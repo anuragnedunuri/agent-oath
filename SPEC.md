@@ -117,10 +117,21 @@ reports `not_integrated` for analyzable text; the UI shows the reason verbatim.
 - Publication date: `htmldate` library; report method and confidence.
 
 ### §4.2 Synthetic detection (INV-3, INV-5)
-- Model: an open-source AI-text detector from Hugging Face (e.g., a
-  RoBERTa-based openai-detector class model). FINAL CHOICE IS TASK 2.1: evaluate
-  2–3 candidates on a 10-item smoke set BEFORE wiring in. Prefer HF Inference
-  API for deploy simplicity; local transformers acceptable for dev.
+- Model: Hello-SimpleAI/chatgpt-detector-roberta (RoBERTa-base fine-tuned on
+  the HC3 human/ChatGPT corpus). Selected in the task 2.1 spike, 2026-09-19,
+  on a 10-item smoke set (5 verified pre-2022 human texts, 5 LLM-generated):
+  perfect ranking separation (AUC 1.0), zero false positives on the human
+  texts, ~280 ms per 512-token section on CPU. The openai-detector class model
+  originally suggested here scored at chance (AUC 0.48) against modern LLM
+  text and was rejected. The runner-up (fakespot-ai roberta-base v1) ranked
+  equally well but assigned 0.92-0.99 AI probability to two of five verified
+  human texts; that false-positive profile is the failure mode this charter
+  can least accept. Known limits, to be documented publicly by the benchmark:
+  smoke n=10, one generator family, encyclopedic human register, and weak
+  calibration at a 0.5 threshold (the product reports the probability itself,
+  never a thresholded verdict). Runs via local transformers, CPU adequate;
+  serverless HF inference for community models is not dependable, so deployed
+  inference is local to the backend (sizing decided in Task 6.1).
 - Chunking: split extracted text into ~400-token sections. Analyze up to the
   first 5 sections plus the final section (captures intro + body + close).
   Report per-section scores and the mean. UI states which sections were

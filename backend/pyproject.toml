@@ -1,0 +1,29 @@
+[project]
+name = "agent-oath-backend"
+version = "0.1.0"
+description = "Trust Verification Layer backend (Global Trust Challenge, Entry 117)."
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I import order, UP pyupgrade, B bugbear,
+# ANN annotations (project rule: type hints everywhere), D docstrings on public API.
+select = ["E", "W", "F", "I", "UP", "B", "ANN", "D"]
+ignore = [
+    "D203", # incompatible with D211
+    "D213", # incompatible with D212
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D100", "D101", "D102", "D103", "D104", "ANN401"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

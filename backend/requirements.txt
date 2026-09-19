@@ -1,0 +1,12 @@
+# Runtime dependencies. Kept boring and mainstream on purpose.
+# Dependencies for later checks (transformers/HF client, anthropic) are added
+# by the task that first needs them.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.5
+pydantic-settings==2.7.1
+httpx==0.28.1
+beautifulsoup4==4.12.3
+htmldate==1.10.0
+tldextract==5.3.2
+python-whois==0.9.6

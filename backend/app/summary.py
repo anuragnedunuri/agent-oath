@@ -5,14 +5,14 @@ absence is explained. INV-2 is the governing rule: every input produces a
 complete TrustSummary, and `retrieval.checks_completed` is the honest ledger
 of which checks actually executed.
 
-The synthetic check is a special case until the detection module lands (task
-2.2): where there is analyzable text, the summary says outright that no
-detection model is integrated yet, and `checks_completed` never lists a check
-that did not run.
+The synthetic check counts as completed when it produced a determination: a
+score, or an honest text_too_short refusal. A check that could not run (no
+content, or the model failed to load) never appears in `checks_completed`.
 """
 
 from .checks import registry
 from .checks.provenance import check_provenance
+from .checks.synthetic import MODEL_ID, analyze_text
 from .fetcher import MIN_EXTRACTABLE_CHARS, fetch_url
 from .models import (
     AnalyzeRequest,
@@ -24,59 +24,20 @@ from .models import (
     TrustSummary,
 )
 
-MIN_DETECTION_WORDS = 100
-"""SPEC.md section 4.2: below this, detection is unreliable and refuses."""
-
-PLACEHOLDER_MODEL_NAME = "none"
-PLACEHOLDER_MODEL_VERSION = "0.0.0"
-"""Until task 2.1 selects a detector, there is no model to name. The detail
-string states this outright; nothing pretends a model ran."""
-
-NOT_INTEGRATED_DETAIL = (
-    "The AI-text detection model has not been integrated yet, so no estimate was "
-    "produced for this text. The other checks in this summary ran normally."
-)
-
 
 def _synthetic_skipped(detail: str) -> SyntheticResult:
     return SyntheticResult(
         status="skipped_no_content",
-        model_name=PLACEHOLDER_MODEL_NAME,
-        model_version=PLACEHOLDER_MODEL_VERSION,
+        model_name=MODEL_ID,
+        model_version="n/a",
         detail=detail,
-    )
-
-
-def _synthetic_not_integrated() -> SyntheticResult:
-    """There was analyzable text, but no detection model exists yet (pre task 2.2)."""
-    return SyntheticResult(
-        status="not_integrated",
-        model_name=PLACEHOLDER_MODEL_NAME,
-        model_version=PLACEHOLDER_MODEL_VERSION,
-        detail=NOT_INTEGRATED_DETAIL,
-    )
-
-
-def _synthetic_too_short(word_count: int) -> SyntheticResult:
-    return SyntheticResult(
-        status="text_too_short",
-        model_name=PLACEHOLDER_MODEL_NAME,
-        model_version=PLACEHOLDER_MODEL_VERSION,
-        detail=(
-            f"This passage is {word_count} words long. Detection needs at least "
-            f"{MIN_DETECTION_WORDS} words to say anything meaningful, so no estimate "
-            f"was produced."
-        ),
     )
 
 
 def _synthetic_for_text(text: str) -> tuple[SyntheticResult, bool]:
     """The synthetic result for analyzable text, and whether the check ran."""
-    word_count = len(text.split())
-    if word_count < MIN_DETECTION_WORDS:
-        # The length check is a real, honest determination: it ran.
-        return _synthetic_too_short(word_count), True
-    return _synthetic_not_integrated(), False
+    result = analyze_text(text)
+    return result, result.status in ("ok", "text_too_short")
 
 
 def build_trust_summary(request: AnalyzeRequest) -> TrustSummary:

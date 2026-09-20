@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     app_env: Literal["dev", "prod"] = "dev"
     cors_allow_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    preload_detector: bool = Field(
+        default=True,
+        description="Load the AI-text detection model at startup instead of first request.",
+    )
 
     # Secrets. Empty until the task that needs them; the app must start without them.
     anthropic_api_key: str = ""

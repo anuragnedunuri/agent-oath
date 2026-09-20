@@ -128,7 +128,8 @@ export default function Inspector() {
 
       {loading && (
         <p className="progress" role="status">
-          Analyzing. Retrieving the page and running checks; slow sites can take up to 30 seconds.
+          Analyzing. Retrieving the content, scoring text sections with the detection model, and
+          checking provenance. Slow sites can take up to 30 seconds.
         </p>
       )}
 

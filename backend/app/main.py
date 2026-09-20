@@ -1,8 +1,12 @@
 """FastAPI application: CORS, routers, and the /health endpoint."""
 
+import threading
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .checks.synthetic import warm_up
 from .config import get_settings
 from .models import AnalyzeRequest, HealthResponse, TrustSummary
 from .summary import build_trust_summary
@@ -12,7 +16,21 @@ VERSION = "0.1.0"
 
 settings = get_settings()
 
+
+@asynccontextmanager
+async def _lifespan(application: FastAPI):  # noqa: ANN202
+    """Warm the detection model in the background at startup.
+
+    The first analysis then does not pay the model load. Best effort: failure
+    is retried and reported honestly by the check itself.
+    """
+    if settings.preload_detector:
+        threading.Thread(target=warm_up, name="detector-warmup", daemon=True).start()
+    yield
+
+
 app = FastAPI(
+    lifespan=_lifespan,
     title="Agent Oath: Trust Verification Layer",
     description="Trust Summary API for Mode 1 (Inspector) and Mode 2 (Agent demo).",
     version=VERSION,

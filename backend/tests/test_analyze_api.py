@@ -9,12 +9,23 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+import app.checks.synthetic as synthetic_module
 import app.summary as summary_module
 from app.fetcher import FetchResult
 from app.models import DomainAge, ProvenanceResult, PublicationDate, Signal, TrustSummary
 
 LONG_TEXT = ("An ordinary paragraph of source text for the analyzer to consider. " * 40).strip()
 SHORT_TEXT = "Only a handful of words."
+
+
+@pytest.fixture(autouse=True)
+def fake_detector(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No API test loads the real model: sections score a flat 0.42."""
+
+    def fake_loader() -> tuple[object, str]:
+        return (lambda section: 0.42), "test-revision"
+
+    monkeypatch.setattr(synthetic_module, "_load_default_scorer", fake_loader)
 
 
 def fake_fetch(result: FetchResult) -> object:
@@ -102,14 +113,14 @@ class TestUrlInput:
 
         assert body.status_code == 200
         assert summary.retrieval.status == "ok"
-        assert summary.retrieval.checks_completed == ["provenance", "registry"]
+        assert summary.retrieval.checks_completed == ["synthetic", "provenance", "registry"]
         assert summary.provenance.domain == "example-news.com"
         assert summary.credibility.status == "unrated"
 
-    def test_detection_is_declared_not_integrated_never_faked(
+    def test_readable_page_gets_a_detection_estimate(
         self, client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Until task 2.2 there is no detector, and the summary says exactly that."""
+        """INV-3: the score arrives with sections, model identity, disclaimer."""
         monkeypatch.setattr(summary_module, "fetch_url", fake_fetch(ok_fetch_result()))
         monkeypatch.setattr(summary_module, "check_provenance", fake_provenance())
 
@@ -117,10 +128,11 @@ class TestUrlInput:
             client.post("/api/analyze", json={"url": "https://example-news.com/article"}).json()
         )
 
-        assert summary.synthetic.status == "not_integrated"
-        assert summary.synthetic.probability_ai is None
-        assert "not been integrated" in summary.synthetic.detail
-        assert "synthetic" not in summary.retrieval.checks_completed
+        assert summary.synthetic.status == "ok"
+        assert summary.synthetic.probability_ai == 0.42
+        assert summary.synthetic.sections
+        assert summary.synthetic.model_version == "test-revision"
+        assert "synthetic" in summary.retrieval.checks_completed
 
     def test_blocked_page_yields_honest_partial_summary(
         self, client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -186,15 +198,15 @@ class TestTextInput:
         assert summary.provenance.domain is None
         assert summary.credibility.status == "unrated"
 
-    def test_long_text_reports_detector_not_integrated(self, client: TestClient) -> None:
+    def test_long_text_is_scored_section_by_section(self, client: TestClient) -> None:
         summary = TrustSummary.model_validate(
             client.post("/api/analyze", json={"text": LONG_TEXT}).json()
         )
 
-        assert summary.synthetic.status == "not_integrated"
-        assert summary.synthetic.probability_ai is None
-        assert "not been integrated" in summary.synthetic.detail
-        assert summary.retrieval.checks_completed == []
+        assert summary.synthetic.status == "ok"
+        assert summary.synthetic.probability_ai == 0.42
+        assert summary.synthetic.total_sections >= 1
+        assert summary.retrieval.checks_completed == ["synthetic"]
 
     def test_text_provenance_explains_why_it_could_not_run(self, client: TestClient) -> None:
         summary = TrustSummary.model_validate(

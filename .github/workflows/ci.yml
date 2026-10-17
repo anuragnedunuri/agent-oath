@@ -32,6 +32,9 @@ jobs:
       - name: Pytest
         run: pytest
 
+      - name: Validate registry
+        run: python ../registry/validate_registry.py
+
   frontend:
     name: Frontend (format + build)
     runs-on: ubuntu-latest

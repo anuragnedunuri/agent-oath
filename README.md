@@ -55,7 +55,8 @@ every push and pull request. See
 
 ## Status
 
-Through task 1.3: scaffold, locked API contract, URL fetcher with its honest
-failure taxonomy, provenance checks, and a live /api/analyze wired to the Inspector
-page. AI-text detection, the seeded registry, and the benchmark are still to come,
-and the summary says so honestly wherever they would appear.
+Through task 3.1: scaffold, locked API contract, URL fetcher with its honest
+failure taxonomy, provenance checks, chunked AI-text detection, the seeded source
+registry with its validator, and a live /api/analyze wired to the Inspector page.
+Registry population, Mode 2, and the benchmark are still to come, and the summary
+says so honestly wherever they would appear.

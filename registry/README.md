@@ -1,10 +1,15 @@
 # Source registry
 
-This directory will hold:
+The versioned source registry behind the credibility check.
 
-- `registry.json` - the versioned source registry (schema in SPEC.md section 5)
-- `METHODOLOGY.md` - the public scoring criteria
-- `validate_registry.py` - schema and trust-tier math validation, run in CI
+- `registry.json` - the registry itself: versioned, dated, currently 21 seed
+  entries across wires, newspapers, broadcasters, magazines, and digital
+  native outlets
+- `METHODOLOGY.md` - the public criteria every entry is scored against, the
+  mechanical tier rule, and how to challenge an entry
+- `validate_registry.py` - schema, tier math, and hygiene validation; run by
+  continuous integration on every push
 
-Built in task 3.1. Empty until then by design: an unknown source returns
-`unrated`, never an interpolated score (INV-6).
+Sources not in the registry are reported as unrated with an honest
+explanation. An absent rating is not a negative rating (INV-6), and the
+backend refuses to serve any entry whose tier contradicts its criteria.

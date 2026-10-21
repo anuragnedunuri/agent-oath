@@ -210,10 +210,14 @@ function CredibilityBlock({ credibility }: { credibility: CredibilityResult }) {
     );
   }
 
-  const criteria: Array<[string, boolean]> = [
-    ['Editorial standards published', entry.editorial_standards_public],
-    ['Corrections policy published', entry.corrections_policy_public],
-    ['Ownership transparent', entry.ownership_transparent],
+  const criteria: Array<[string, boolean, string | null]> = [
+    [
+      'Editorial standards published',
+      entry.editorial_standards_public,
+      entry.editorial_standards_url,
+    ],
+    ['Corrections policy published', entry.corrections_policy_public, entry.corrections_policy_url],
+    ['Ownership transparent', entry.ownership_transparent, entry.ownership_url],
   ];
   const met = criteria.filter(([, value]) => value).length;
 
@@ -239,10 +243,20 @@ function CredibilityBlock({ credibility }: { credibility: CredibilityResult }) {
             </tr>
           </thead>
           <tbody>
-            {criteria.map(([label, value]) => (
+            {criteria.map(([label, value, evidenceUrl]) => (
               <tr key={label}>
                 <td>{label}</td>
-                <td>{value ? 'Yes' : 'No'}</td>
+                <td>
+                  {value ? 'Yes' : 'No'}
+                  {value && evidenceUrl && (
+                    <>
+                      {' '}
+                      <a href={evidenceUrl} target="_blank" rel="noopener noreferrer">
+                        (evidence)
+                      </a>
+                    </>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

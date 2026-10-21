@@ -30,6 +30,17 @@ review time. It is a statement about findability on the review date, not a
 claim that the item does not exist. Publishers can have an entry corrected by
 pointing to the published page (see Corrections below).
 
+## The evidence rule
+
+Since registry version 1.1.0, every `true` must carry a matching evidence URL
+(`editorial_standards_url`, `corrections_policy_url`, `ownership_url`)
+pointing at the public page that evidences it. The validator fails the build
+on a `true` without evidence; a `false` needs no URL. Tooling
+(`assist_verify.py`) may suggest candidate pages, but it decides nothing: a
+human confirms each page before an entry counts as verified, and
+`last_verified` records that human check. Entries whose evidence was located
+by tooling but not yet humanly confirmed say so in `notes`.
+
 ## The tier rule
 
 The trust tier derives mechanically from the three booleans:

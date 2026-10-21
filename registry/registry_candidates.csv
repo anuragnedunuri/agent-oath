@@ -1,0 +1,143 @@
+domain,publisher_name,source_type,country,editorial_standards_url,corrections_policy_url,ownership_url,verified_by,verified_date,notes,editorial_candidates,corrections_candidates,ownership_candidates
+reuters.com,Reuters,news_wire,GB,,,,,,,,,
+apnews.com,Associated Press,news_wire,US,,,,,,,,,
+afp.com,Agence France-Presse,news_wire,FR,,,,,,,,,
+bloomberg.com,Bloomberg News,news_wire,US,,,,,,,,,
+ptinews.com,Press Trust of India,news_wire,IN,,,,,,,,,
+efe.com,Agencia EFE,news_wire,ES,,,,,,,,,
+dpa.com,Deutsche Presse-Agentur,news_wire,DE,,,,,,,,,
+nytimes.com,The New York Times,newspaper,US,,,,,,,,,
+washingtonpost.com,The Washington Post,newspaper,US,,,,,,,,,https://washingtonpost.com/about
+wsj.com,The Wall Street Journal,newspaper,US,,,,,,,,,https://wsj.com/about-us
+latimes.com,Los Angeles Times,newspaper,US,,,,,,,https://latimes.com/ethics,https://latimes.com/corrections,https://www.latimes.com/about
+chicagotribune.com,Chicago Tribune,newspaper,US,,,,,,,,,
+bostonglobe.com,The Boston Globe,newspaper,US,,,,,,,,,
+usatoday.com,USA Today,newspaper,US,,,,,,,,,
+sfchronicle.com,San Francisco Chronicle,newspaper,US,,,,,,,,,
+dallasnews.com,The Dallas Morning News,newspaper,US,,,,,,,,,
+seattletimes.com,The Seattle Times,newspaper,US,,,,,,,,,
+miamiherald.com,Miami Herald,newspaper,US,,,,,,,,,
+startribune.com,Star Tribune,newspaper,US,,,,,,,,,
+pbs.org,PBS,broadcaster,US,,,,,,,,,
+cnn.com,CNN,broadcaster,US,,,,,,,,,https://cnn.com/about
+nbcnews.com,NBC News,broadcaster,US,,,,,,,,,https://nbcnews.com/about-us
+cbsnews.com,CBS News,broadcaster,US,,,,,,,,,https://cbsnews.com/about
+foxnews.com,Fox News,broadcaster,US,,,,,,,,,https://foxnews.com/about
+go.com,ABC News (US),broadcaster,US,,,,,,Registrable domain resolves to go.com; registry key needs special handling or skip,,,
+axios.com,Axios,digital_native,US,,,,,,,,,
+politico.com,Politico,digital_native,US,,,,,,,,,
+theatlantic.com,The Atlantic,magazine,US,,,,,,,,,
+vox.com,Vox,digital_native,US,,,,,,,https://vox.com/podcasts/506698/deadbots-ai-chatbots-ethics-talking-d,,https://vox.com/about
+wired.com,Wired,magazine,US,,,,,,,,,
+arstechnica.com,Ars Technica,digital_native,US,,,,,,,,,
+theverge.com,The Verge,digital_native,US,,,,,,,,,https://theverge.com/about
+techcrunch.com,TechCrunch,digital_native,US,,,,,,,,,
+ft.com,Financial Times,newspaper,GB,,,,,,,,,
+thetimes.co.uk,The Times,newspaper,GB,,,,,,,,,
+telegraph.co.uk,The Telegraph,newspaper,GB,,,,,,,,,https://telegraph.co.uk/about-us
+independent.co.uk,The Independent,newspaper,GB,,,,,,,,https://independent.co.uk/service/code-of-conduct-a6184241.html,
+economist.com,The Economist,magazine,GB,,,,,,,,,
+channel4.com,Channel 4 News,broadcaster,GB,,,,,,,,,
+sky.com,Sky News,broadcaster,GB,,,,,,News lives at news.sky.com; registrable domain is sky.com,,https://www.sky.com/help/articles/sky-customer-complaints-code-of-practice/,
+dailymail.co.uk,Daily Mail,newspaper,GB,,,,,,,,,
+mirror.co.uk,Daily Mirror,newspaper,GB,,,,,,,,,
+thesun.co.uk,The Sun,newspaper,GB,,,,,,,,,
+lemonde.fr,Le Monde,newspaper,FR,,,,,,,https://www.lemonde.fr/en/about-us/article/2022/04/06/groupe-le-monde-s-code-of-ethics-and-professional-conduct_5979823_115.html,,https://lemonde.fr/en/about-us/
+lefigaro.fr,Le Figaro,newspaper,FR,,,,,,,,,
+france24.com,France 24,broadcaster,FR,,,,,,,,,
+dw.com,Deutsche Welle,broadcaster,DE,,,,,,,,,https://dw.com/about-us
+spiegel.de,Der Spiegel,magazine,DE,,,,,,,,,
+faz.net,Frankfurter Allgemeine Zeitung,newspaper,DE,,,,,,,,,
+zeit.de,Die Zeit,newspaper,DE,,,,,,,,,
+sueddeutsche.de,Sueddeutsche Zeitung,newspaper,DE,,,,,,,https://sueddeutsche.de/ethics,https://sueddeutsche.de/corrections,https://sueddeutsche.de/about
+elpais.com,El Pais,newspaper,ES,,,,,,,,,
+elmundo.es,El Mundo,newspaper,ES,,,,,,,,,
+corriere.it,Corriere della Sera,newspaper,IT,,,,,,,,,
+repubblica.it,La Repubblica,newspaper,IT,,,,,,,,,
+nos.nl,NOS,broadcaster,NL,,,,,,,,,
+swissinfo.ch,SWI swissinfo.ch,broadcaster,CH,,,,,,,,,
+rte.ie,RTE News,broadcaster,IE,,,,,,,,,
+irishtimes.com,The Irish Times,newspaper,IE,,,,,,,,,https://irishtimes.com/ireland/2026/10/17/irish-aid-agencies-feel-the-pinch-on-the-ground-from-cuts-in-overseas-funding/
+euronews.com,Euronews,broadcaster,FR,,,,,,,,,
+politico.eu,Politico Europe,digital_native,BE,,,,,,,,,
+cbc.ca,CBC News,broadcaster,CA,,,,,,,,,
+theglobeandmail.com,The Globe and Mail,newspaper,CA,,,,,,,,,https://theglobeandmail.com/about
+thestar.com,Toronto Star,newspaper,CA,,,,,,,,,
+smh.com.au,The Sydney Morning Herald,newspaper,AU,,,,,,,,,https://smh.com.au/about-us
+theage.com.au,The Age,newspaper,AU,,,,,,,,,
+nzherald.co.nz,The New Zealand Herald,newspaper,NZ,,,,,,,,,
+rnz.co.nz,RNZ,broadcaster,NZ,,,,,,,,,
+thehindu.com,The Hindu,newspaper,IN,,,,,,,,https://www.thehindu.com/opinion/Readers-Editor/corrections-and-clarifications/ | https://www.thehindu.com/news/national/supreme-court-appointed-panel-launches-portal-for-complaints-over-july-violence-at-jantar-mantar/article71596471.ece,https://www.thehindu.com/aboutus/
+indianexpress.com,The Indian Express,newspaper,IN,,,,,,,,,https://indianexpress.com/about
+indiatimes.com,The Times of India,newspaper,IN,,,,,,Site is timesofindia.indiatimes.com; registrable domain is indiatimes.com,,,
+hindustantimes.com,Hindustan Times,newspaper,IN,,,,,,,,,
+ndtv.com,NDTV,broadcaster,IN,,,,,,,,,
+scroll.in,Scroll.in,digital_native,IN,,,,,,,,,
+thewire.in,The Wire,digital_native,IN,,,,,,,,,
+livemint.com,Mint,newspaper,IN,,,,,,,,,
+dawn.com,Dawn,newspaper,PK,,,,,,,,,
+thedailystar.net,The Daily Star,newspaper,BD,,,,,,,,,
+scmp.com,South China Morning Post,newspaper,HK,,,,,,,,,
+japantimes.co.jp,The Japan Times,newspaper,JP,,,,,,,https://japantimes.co.jp/ethics,https://japantimes.co.jp/corrections,https://japantimes.co.jp/about
+asahi.com,The Asahi Shimbun,newspaper,JP,,,,,,,,,
+nhk.or.jp,NHK,broadcaster,JP,,,,,,,,,
+koreaherald.com,The Korea Herald,newspaper,KR,,,,,,,,,
+straitstimes.com,The Straits Times,newspaper,SG,,,,,,,https://straitstimes.com/ethics,https://straitstimes.com/corrections,https://www.straitstimes.com/singapore/about-the-straits-times-leadership
+channelnewsasia.com,CNA,broadcaster,SG,,,,,,,,,https://channelnewsasia.com/about-us
+rappler.com,Rappler,digital_native,PH,,,,,,,,,
+thejakartapost.com,The Jakarta Post,newspaper,ID,,,,,,,,,
+timesofisrael.com,The Times of Israel,digital_native,IL,,,,,,,,,
+haaretz.com,Haaretz,newspaper,IL,,,,,,,,,https://haaretz.com/west-bank/2026-10-17/ty-article/.premium/eu-warns-against-funding-west-bank-settlements-as-israels-banks-fear-sanctions/000001a1-4722-d0c0-a9f3-77631c310000 | https://haaretz.com/israel-news/elections/2026-10-16/ty-article-magazine/.highlight/liberal-israelis-stop-funding-the-oppression-of-ultra-orthodox-women/000001a1-3f59-d1eb-abe1-7f7df94c0000
+arabnews.com,Arab News,newspaper,SA,,,,,,,,,
+thenationalnews.com,The National,newspaper,AE,,,,,,,,,
+dailymaverick.co.za,Daily Maverick,digital_native,ZA,,,,,,,,,
+news24.com,News24,digital_native,ZA,,,,,,,,,
+mg.co.za,Mail & Guardian,newspaper,ZA,,,,,,,,,
+nation.africa,Nation Media Group,newspaper,KE,,,,,,,,,
+punchng.com,Punch,newspaper,NG,,,,,,,,,
+premiumtimesng.com,Premium Times,digital_native,NG,,,,,,,,,
+globo.com,O Globo,newspaper,BR,,,,,,Site is oglobo.globo.com; registrable domain is globo.com (portal),,,
+uol.com.br,Folha de S.Paulo,newspaper,BR,,,,,,Site is folha.uol.com.br; registrable domain is uol.com.br (portal); consider folha.com.br redirect,,,
+clarin.com,Clarin,newspaper,AR,,,,,,,,,
+lanacion.com.ar,La Nacion,newspaper,AR,,,,,,,,,
+eluniversal.com.mx,El Universal,newspaper,MX,,,,,,,,,
+infobae.com,Infobae,digital_native,AR,,,,,,,,,
+who.int,World Health Organization,institutional,CH,,,,,,,,,
+cdc.gov,US Centers for Disease Control and Prevention,institutional,US,,,,,,,,,
+nih.gov,US National Institutes of Health,institutional,US,,,,,,,,,
+fda.gov,US Food and Drug Administration,institutional,US,,,,,,,,,
+nasa.gov,NASA,institutional,US,,,,,,,,https://science.nasa.gov/researchers/solicitations/roses-2025/correction-to-roses-25-b-7-heliophysics-low-cost-access-to-space/,https://www.nasa.gov/budgets-plans-and-reports/
+nature.com,Nature,institutional,GB,,,,,,,https://nature.com/nature/editorial-policies | https://nature.com/authors/editorial_policies/,,https://nature.com/nature/open-access-funding | https://www.nature.com/npg_/company_info/index.html
+science.org,Science (AAAS),institutional,US,,,,,,,,,
+bmj.com,The BMJ,institutional,GB,,,,,,,,,
+thelancet.com,The Lancet,institutional,GB,,,,,,,,,
+oecd.org,OECD,institutional,FR,,,,,,,,,
+un.org,United Nations,institutional,US,,,,,,,,,
+gov.uk,UK Government,institutional,GB,,,,,,,,,
+factcheck.org,FactCheck.org,digital_native,US,,,,,,,,,
+politifact.com,PolitiFact,digital_native,US,,,,,,,,,
+snopes.com,Snopes,digital_native,US,,,,,,,,,
+fullfact.org,Full Fact,digital_native,GB,,,,,,,,,
+ansa.it,ANSA,news_wire,IT,,,,,,,,,
+kyodonews.net,Kyodo News,news_wire,JP,,,,,,,,,
+thetimes.com,The Times,newspaper,GB,,,,,,,,https://thetimes.com/corrections,https://thetimes.com/uk/politics/article/trump-ukraine-funding-burnham-zelensky-q80tn9kvm
+nzz.ch,Neue Zuercher Zeitung,newspaper,CH,,,,,,,,,
+sbs.com.au,SBS,broadcaster,AU,,,,,,,,,https://sbs.com.au/about
+newyorker.com,The New Yorker,magazine,US,,,,,,,,,
+time.com,Time,magazine,US,,,,,,,,,
+newscientist.com,New Scientist,magazine,GB,,,,,,,,,
+scientificamerican.com,Scientific American,magazine,US,,,,,,,https://scientificamerican.com/standards-and-ethics/,,
+semafor.com,Semafor,digital_native,US,,,,,,,,,https://semafor.com/about
+theintercept.com,The Intercept,digital_native,US,,,,,,,,https://theintercept.com/complaints,https://theintercept.com/about
+restofworld.org,Rest of World,digital_native,US,,,,,,,https://restofworld.org/ethics,https://restofworld.org/corrections,https://restofworld.org/about/ | https://restofworld.org/2026/us-ai-investment-global-funding-gap/
+themarkup.org,The Markup,digital_native,US,,,,,,,https://themarkup.org/ethics,,https://themarkup.org/about | https://themarkup.org/board-of-directors
+pewresearch.org,Pew Research Center,institutional,US,,,,,,,,,https://www.pewresearch.org/about/
+brookings.edu,Brookings Institution,institutional,US,,,,,,,https://brookings.edu/ethics,https://brookings.edu/corrections,https://www.brookings.edu/about-us/ | https://www.brookings.edu/articles/shaping-global-governance-of-ai-agents/ | https://www.brookings.edu/programs/governance-studies/
+noaa.gov,NOAA,institutional,US,,,,,,,,,https://noaa.gov/about-us
+bbc.com,BBC,broadcaster,GB,,,,,,"demoted 2026-10-21 (pending, unverified); desk grading standards=y corrections=y ownership=y",https://www.bbc.co.uk/editorialguidelines,https://www.bbc.co.uk/helpandfeedback/corrections_clarifications,https://www.bbc.com/aboutthebbc
+bbc.co.uk,BBC,broadcaster,GB,,,,,,"demoted 2026-10-21 (pending, unverified); desk grading standards=y corrections=y ownership=y",https://www.bbc.co.uk/editorialguidelines,https://www.bbc.co.uk/helpandfeedback/corrections_clarifications,https://www.bbc.com/aboutthebbc
+theguardian.com,The Guardian,newspaper,GB,,,,,,"demoted 2026-10-21 (pending, unverified); desk grading standards=y corrections=y ownership=y",https://www.theguardian.com/info/2015/aug/05/the-guardians-editorial-code,https://www.theguardian.com/info/complaints-and-corrections,https://www.theguardian.com/about
+npr.org,NPR,broadcaster,US,,,,,,"demoted 2026-10-21 (pending, unverified); desk grading standards=y corrections=y ownership=y",https://www.npr.org/ethics/,https://www.npr.org/corrections/,https://www.npr.org/about/
+abc.net.au,Australian Broadcasting Corporation,broadcaster,AU,,,,,,"demoted 2026-10-21 (pending, unverified); desk grading standards=y corrections=y ownership=y",https://www.abc.net.au/edpols,https://www.abc.net.au/corrections,https://www.abc.net.au/about
+aljazeera.com,Al Jazeera,broadcaster,QA,,,,,,"demoted 2026-10-21 (pending, unverified); desk grading standards=y corrections=n ownership=y",https://www.aljazeera.com/code-of-ethics/,,https://www.aljazeera.com/about-us
+propublica.org,ProPublica,digital_native,US,,,,,,"demoted 2026-10-21 (pending, unverified); desk grading standards=y corrections=y ownership=y",https://www.propublica.org/code-of-ethics,https://www.propublica.org/corrections,https://www.propublica.org/about

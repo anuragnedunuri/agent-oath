@@ -19,6 +19,12 @@ Evidence artifacts also promised: ~40-article benchmark (half verified human
 journalism, half AI-generated-by-us so ground truth is certain), a 10–15 person
 comprehension study, and full code + registry + methodology public on GitHub.
 
+The GTC verification claims register (October 2026) expands these three
+claims into C1–C8 (and C9 if evaluated as Integrated). C8, the exportable
+session audit log, is specified in §6 and was approved as a scope addition on
+2026-10-17. The register must never claim anything this document does not
+specify.
+
 ## §2. Repository layout
 
 ```
@@ -35,9 +41,12 @@ agent-oath/
 │   │   ├── fetcher.py           # URL retrieval w/ honest failure taxonomy
 │   │   ├── summary.py           # assembles TrustSummary from check results
 │   │   ├── agent/
-│   │   │   ├── search.py        # source gathering for Mode 2
-│   │   │   ├── approval.py      # server-side approval store (INV-1)
-│   │   │   └── answer.py        # LLM answer from APPROVED sources only
+│   │   │   ├── search.py        # source gathering for Mode 2 (seed + BYO)
+│   │   │   ├── seed_topics.json # curated demo topics and their URLs
+│   │   │   ├── demo_articles/   # AI-generated demo pages served at /demo/articles/<slug>
+│   │   │   ├── approval.py      # server-side session + approval store (INV-1)
+│   │   │   ├── answer.py        # LLM answer from APPROVED sources only
+│   │   │   └── audit.py         # session audit log export
 │   │   └── config.py
 │   └── tests/
 ├── frontend/
@@ -47,6 +56,8 @@ agent-oath/
 │       └── components/TrustSummaryCard.tsx
 ├── registry/
 │   ├── registry.json            # the source registry (versioned)
+│   ├── registry_candidates.csv  # publishers queued for verification
+│   ├── assist_verify.py         # finds candidate evidence pages; decides nothing
 │   ├── METHODOLOGY.md           # scoring criteria, public
 │   └── validate_registry.py
 └── benchmark/
@@ -105,6 +116,8 @@ On any of these: run provenance domain-level signals + registry lookup anyway;
 `checks_completed` lists what ran; synthetic check reports `skipped_no_content`.
 While no detection model is integrated (before §4.2 is implemented), synthetic
 reports `not_integrated` for analyzable text; the UI shows the reason verbatim.
+A runtime model-load failure also reports `not_integrated`, with an explanatory
+`detail` naming the failure (approved 2026-10-17; no dedicated status).
 
 ## §4. Check modules
 
@@ -132,6 +145,17 @@ reports `not_integrated` for analyzable text; the UI shows the reason verbatim.
   never a thresholded verdict). Runs via local transformers, CPU adequate;
   serverless HF inference for community models is not dependable, so deployed
   inference is local to the backend (sizing decided in Task 6.1).
+- Re-spike 2026-10-17 (task 2.1b), decision 2026-10-21: the current model, a
+  COLING 2025 competition-winning DeBERTa detector, and a scaled-down
+  zero-shot Binoculars were evaluated on 10 verified pre-2022 human texts and
+  10 current-generation LLM texts. All three failed to rank frontier-model
+  prose as machine-written (AUC 0.58 / 0.04 / 0.18); the competition winner
+  scored every LLM text as confidently human. The current model is retained
+  as the only candidate meeting the zero-false-positive-on-human-text bar.
+  Full method and per-item numbers are in the 2.1b spike record (2026-10-17)
+  in the project's working notes; the public benchmark (section 7) must
+  include current-generation multi-model texts so this limitation is
+  published with numbers.
 - Chunking: split extracted text into ~400-token sections. Analyze up to the
   first 5 sections plus the final section (captures intro + body + close).
   Report per-section scores and the mean. UI states which sections were
@@ -147,8 +171,8 @@ registered domain. Miss → `unrated` (INV-6).
 
 ```json
 {
-  "version": "1.0.0",
-  "updated": "2026-08-01",
+  "version": "1.1.0",
+  "updated": "2026-10-17",
   "criteria_doc": "METHODOLOGY.md",
   "entries": [
     {
@@ -157,10 +181,13 @@ registered domain. Miss → `unrated` (INV-6).
       "trust_tier": "high",
       "source_type": "news_wire | newspaper | broadcaster | magazine | digital_native | institutional | other",
       "editorial_standards_public": true,
+      "editorial_standards_url": "https://...",
       "corrections_policy_public": true,
+      "corrections_policy_url": "https://...",
       "ownership_transparent": true,
+      "ownership_url": "https://...",
       "country": "GB",
-      "last_verified": "2026-08-01",
+      "last_verified": "2026-10-17",
       "notes": ""
     }
   ]
@@ -169,18 +196,40 @@ registered domain. Miss → `unrated` (INV-6).
 - `trust_tier` derives mechanically from the three booleans:
   3 true = high, 2 = medium, otherwise low. Rule lives in METHODOLOGY.md and
   in `validate_registry.py`, which CI-checks every entry (schema + tier math).
-- Target 100+ entries. Populate via structured research passes; booleans only,
-  no essays. `notes` optional and short.
+- **Evidence rule (added 2026-10-17):** the three `*_url` fields are optional
+  strings, but any boolean set to `true` MUST carry its matching URL, pointing
+  at the public page that evidences it. `validate_registry.py` fails the build
+  on a `true` without evidence. A `false` needs no URL. `last_verified` is the
+  date a human last checked the three pages.
+- Entries graded before the evidence rule (the original 21, desk-graded) are
+  the verification backlog; they may fail validation until re-checked. The
+  registry count stated in the claims register is the number of entries that
+  pass validation on demo day, nothing more.
+- `registry/assist_verify.py` fetches likely evidence pages for a candidate
+  domain and outputs candidate URLs for a human to confirm. It never sets a
+  boolean.
+- Target 100+ entries. Booleans only, no essays. `notes` optional and short.
 
 ## §6. Mode 2 — Agent demo (INV-1 critical)
 
-Flow:
-1. `POST /api/agent/ask` `{question}` → backend gathers 3–5 candidate source
-   URLs (search API or curated seed list per topic — Task 4.1 decides; a
-   curated seed list is acceptable and demo-safe), fetches each, runs the full
-   Mode 1 analysis on each, stores `{source_id → {url, extracted_text,
-   trust_summary}}` in the server-side session store. Returns summaries WITHOUT
-   any answer.
+### Source gathering (decided 2026-10-17: seed list plus bring-your-own)
+Two gathering modes, both returning the same structure and both running the
+full Mode 1 analysis per source:
+- **Seed topics**: `agent/seed_topics.json` defines 4 demo topics, each with
+  4–5 URLs chosen to exercise distinct states: at least one fetchable
+  registry-rated outlet, one bot-blocked outlet, one unrated domain, and one
+  AI-generated article served by this backend at `/demo/articles/<slug>`
+  (400–600 words, generated with an LLM, marked synthetic in an HTML comment).
+  The seed list is disclosed to evaluators as curated.
+- **Bring your own URLs**: the user supplies 3–5 URLs as the source set.
+  Fewer than 3 or more than 5 is rejected with a plain-language error.
+
+### Flow
+1. `POST /api/agent/ask` `{question, topic_id | urls[]}` → backend gathers the
+   candidate sources, fetches each, runs the full Mode 1 analysis on each,
+   stores `{source_id → {url, extracted_text, trust_summary, approved: null}}`
+   in the server-side session store under a new `session_id`. Returns
+   summaries WITHOUT any answer.
 2. Frontend renders each source's TrustSummaryCard with Approve / Reject.
 3. `POST /api/agent/approve` `{session_id, source_id, approved: bool}` updates
    the server-side store. The store is the ONLY record of approval.
@@ -191,7 +240,15 @@ Flow:
    to model general knowledge silently; it says so explicitly.
 5. Answer displays with per-source attribution and each cited source's tier.
 
-Bypass hardening checklist (evaluators will try all of these):
+### Session audit log (approved 2026-10-17)
+The server-side session store records, with timestamps: the question, each
+gathered source (URL, extracted-text length, full Trust Summary), each approve
+or reject decision, the answer request, and the source IDs used to build the
+answer. `GET /api/agent/export/{session_id}` returns the full record as JSON.
+No cross-session persistence; the record lives for the session and is
+exportable by the user.
+
+### Bypass hardening checklist (evaluators will try all of these)
 - Calling /answer before any approval → refuses, no LLM call with source text.
 - Tampering source_id or posting text directly to /answer → endpoint accepts
   only session_id; there is no parameter that carries text.
@@ -199,6 +256,8 @@ Bypass hardening checklist (evaluators will try all of these):
   never reaches the model.
 - The user's question itself is the only user-controlled text in the payload;
   system prompt instructs answering strictly from provided source blocks.
+- Dev mode logs the exact LLM request body so absence of unapproved text can
+  be shown on screen.
 
 LLM: Anthropic API, temperature low, max_tokens modest. Exact model id is pinned
 in backend config, chosen at implementation time.
@@ -215,11 +274,16 @@ in backend config, chosen at implementation time.
 
 ## §8. Deployment
 
-- Backend: Render/Railway paid tier (~$10–25/mo) OR backend-anywhere + HF
-  Inference API for the model (avoids RAM pressure). Decision in Task 6.1.
+- Inference is local to the backend (see §4.2); the model needs roughly 2 GB
+  of memory and must load at startup, not on first request.
+- Backend: Render or Railway, a plan with at least 2 GB RAM (~$25/mo),
+  Docker image, `/health` endpoint, model warmed at boot. Sizing confirmed in
+  Task 6.1.
 - Frontend: Vercel/Netlify free tier.
-- One-command local dev: `make dev` runs both.
-- A stable public URL must exist by the GTC readiness check (see the build plan).
+- A free uptime pinger hits `/health` every 10 minutes so the service never
+  sleeps before a demo.
+- One-command local dev: `make dev` runs both, and is the demo fallback.
+- A stable public URL must exist before the verification meeting.
 
 ## §9. Out of scope (do not build)
 

@@ -1,8 +1,9 @@
 """Registry lookup tests (SPEC.md sections 4.3 and 5, INV-6).
 
-The real registry file is exercised directly, so a broken entry in the
-repository fails the suite as well as the standalone validator. Failure paths
-use injected temporary files, never a mutated real registry.
+The repository registry currently holds zero verified entries (the owner's
+human-verified-only boundary, applied 2026-10-21), so rated-path behavior is
+tested against injected fixture registries, and the real file is tested for
+what it truthfully is: valid, versioned, and empty until verification lands.
 """
 
 import json
@@ -17,22 +18,77 @@ from app.checks.registry import (
 )
 from app.models import RegistryEntry
 
+FIXTURE_ENTRIES = [
+    {
+        "domain": "example-news.co.uk",
+        "publisher_name": "Example News",
+        "trust_tier": "high",
+        "source_type": "newspaper",
+        "editorial_standards_public": True,
+        "editorial_standards_url": "https://example-news.co.uk/editorial-code",
+        "corrections_policy_public": True,
+        "corrections_policy_url": "https://example-news.co.uk/corrections",
+        "ownership_transparent": True,
+        "ownership_url": "https://example-news.co.uk/about",
+        "country": "GB",
+        "last_verified": "2026-10-20",
+        "notes": "",
+    },
+    {
+        "domain": "example-wire.com",
+        "publisher_name": "Example Wire",
+        "trust_tier": "medium",
+        "source_type": "news_wire",
+        "editorial_standards_public": True,
+        "editorial_standards_url": "https://example-wire.com/standards",
+        "corrections_policy_public": False,
+        "corrections_policy_url": None,
+        "ownership_transparent": True,
+        "ownership_url": "https://example-wire.com/about",
+        "country": "US",
+        "last_verified": "2026-10-20",
+        "notes": "",
+    },
+]
 
-class TestRegistryFile:
+
+@pytest.fixture
+def fixture_registry(tmp_path: Path) -> Path:
+    path = tmp_path / "registry.json"
+    path.write_text(
+        json.dumps(
+            {
+                "version": "9.0.0",
+                "updated": "2026-10-20",
+                "criteria_doc": "METHODOLOGY.md",
+                "entries": FIXTURE_ENTRIES,
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+class TestRepositoryRegistry:
     def test_the_repository_registry_loads_and_validates(self) -> None:
         registry = load_registry()
 
         assert registry is not None
-        assert registry.version == "1.0.0"
+        assert registry.version == "1.1.1"
         assert registry.criteria_doc == "METHODOLOGY.md"
-        assert len(registry.entries) >= 20
 
-    def test_every_entry_tier_matches_its_booleans(self) -> None:
-        """The model enforces this on load; this test makes the claim explicit."""
+    def test_every_entry_honours_evidence_and_tier_rules(self) -> None:
+        """Holds for every entry present; vacuously true while the registry is empty."""
         registry = load_registry()
         assert registry is not None
 
         for entry in registry.entries:
+            if entry.editorial_standards_public:
+                assert entry.editorial_standards_url, entry.domain
+            if entry.corrections_policy_public:
+                assert entry.corrections_policy_url, entry.domain
+            if entry.ownership_transparent:
+                assert entry.ownership_url, entry.domain
             expected = RegistryEntry.derive_tier(
                 entry.editorial_standards_public,
                 entry.corrections_policy_public,
@@ -40,64 +96,64 @@ class TestRegistryFile:
             )
             assert entry.trust_tier == expected
 
-    def test_domains_are_unique(self) -> None:
+    def test_unverified_boundary_every_lookup_is_currently_unrated(self) -> None:
+        """Owner boundary 2026-10-21: no human-verified entries means no ratings."""
         registry = load_registry()
         assert registry is not None
-        domains = [entry.domain for entry in registry.entries]
 
-        assert len(domains) == len(set(domains))
+        if not registry.entries:
+            assert lookup("theguardian.com").status == "unrated"
 
 
 class TestLookupHits:
-    def test_known_domain_is_rated_with_its_entry(self) -> None:
-        result = lookup("theguardian.com")
+    def test_known_domain_is_rated_with_its_entry(self, fixture_registry: Path) -> None:
+        result = lookup("example-news.co.uk", registry_path=fixture_registry)
 
         assert result.status == "rated"
         assert result.trust_tier == "high"
         assert result.matched_entry is not None
-        assert result.matched_entry.publisher_name == "The Guardian"
-        assert result.registry_version == "1.0.0"
+        assert result.matched_entry.publisher_name == "Example News"
+        assert result.registry_version == "9.0.0"
 
-    def test_subdomain_resolves_to_the_registered_domain(self) -> None:
-        """SPEC 4.3: news.bbc.co.uk is the bbc.co.uk entry."""
-        result = lookup("news.bbc.co.uk")
+    def test_subdomain_resolves_to_the_registered_domain(self, fixture_registry: Path) -> None:
+        """SPEC 4.3: news.example-news.co.uk is the example-news.co.uk entry."""
+        result = lookup("news.example-news.co.uk", registry_path=fixture_registry)
 
         assert result.status == "rated"
         assert result.matched_entry is not None
-        assert result.matched_entry.domain == "bbc.co.uk"
+        assert result.matched_entry.domain == "example-news.co.uk"
 
-    def test_lookup_is_case_insensitive(self) -> None:
-        assert lookup("TheGuardian.com").status == "rated"
+    def test_lookup_is_case_insensitive(self, fixture_registry: Path) -> None:
+        assert lookup("Example-News.CO.UK", registry_path=fixture_registry).status == "rated"
 
-    def test_medium_tier_entries_surface_their_failing_criterion(self) -> None:
-        """The mechanical tier is visible: 2 of 3 criteria gives medium."""
-        result = lookup("aljazeera.com")
+    def test_medium_tier_entries_surface_their_failing_criterion(
+        self, fixture_registry: Path
+    ) -> None:
+        result = lookup("example-wire.com", registry_path=fixture_registry)
 
         assert result.status == "rated"
         assert result.trust_tier == "medium"
         assert result.matched_entry is not None
         assert result.matched_entry.corrections_policy_public is False
+        assert result.matched_entry.corrections_policy_url is None
 
 
 class TestLookupMisses:
-    def test_unknown_domain_is_unrated_with_an_explanation(self) -> None:
-        result = lookup("example-news.com")
+    def test_unknown_domain_is_unrated_with_an_explanation(self, fixture_registry: Path) -> None:
+        result = lookup("unknown-site.org", registry_path=fixture_registry)
 
         assert result.status == "unrated"
         assert result.trust_tier is None
         assert result.matched_entry is None
         assert "not a negative rating" in result.unrated_explanation
-        assert result.registry_version == "1.0.0"
+        assert result.registry_version == "9.0.0"
 
     def test_no_domain_is_unrated_with_its_own_explanation(self) -> None:
         result = lookup(None)
 
         assert result.status == "unrated"
         assert "no domain" in result.unrated_explanation
-        assert result.registry_version == "1.0.0"
-
-    def test_subdomain_of_an_unknown_domain_is_still_unrated(self) -> None:
-        assert lookup("live.example-news.com").status == "unrated"
+        assert result.registry_version == "1.1.1"
 
 
 class TestRegistryUnavailable:
@@ -122,49 +178,71 @@ class TestRegistryUnavailable:
     def test_an_entry_with_dishonest_tier_math_poisons_nothing(self, tmp_path: Path) -> None:
         """A tier contradicting its booleans must not be served (INV-6)."""
         rigged = tmp_path / "rigged.json"
+        entry = dict(FIXTURE_ENTRIES[0])
+        entry["editorial_standards_public"] = False
+        entry["editorial_standards_url"] = None  # booleans now derive medium, tier says high
         rigged.write_text(
             json.dumps(
                 {
                     "version": "9.9.9",
-                    "updated": "2026-09-28",
+                    "updated": "2026-10-20",
                     "criteria_doc": "METHODOLOGY.md",
-                    "entries": [
-                        {
-                            "domain": "example-news.com",
-                            "publisher_name": "Example News",
-                            "trust_tier": "high",
-                            "source_type": "digital_native",
-                            "editorial_standards_public": False,
-                            "corrections_policy_public": False,
-                            "ownership_transparent": False,
-                            "country": "US",
-                            "last_verified": "2026-09-28",
-                            "notes": "",
-                        }
-                    ],
+                    "entries": [entry],
                 }
             ),
             encoding="utf-8",
         )
 
-        result = lookup("example-news.com", registry_path=rigged)
+        result = lookup("example-news.co.uk", registry_path=rigged)
 
         assert result.status == "unrated"
         assert result.registry_version == "unavailable"
 
 
+def _load_validator():  # noqa: ANN202
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "validate_registry", REGISTRY_PATH.parent / "validate_registry.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class TestValidatorScript:
     def test_the_ci_validator_passes_on_the_repository_registry(self) -> None:
-        import importlib.util
+        assert _load_validator().validate() == []
 
-        spec = importlib.util.spec_from_file_location(
-            "validate_registry", REGISTRY_PATH.parent / "validate_registry.py"
+    def test_empty_registry_is_a_warning_not_a_failure(self) -> None:
+        module = _load_validator()
+        registry = load_registry()
+        assert registry is not None
+
+        if not registry.entries:
+            assert any("zero verified entries" in w for w in module.warnings())
+
+    def test_the_validator_rejects_a_true_without_evidence(self, tmp_path: Path) -> None:
+        module = _load_validator()
+        entry = dict(FIXTURE_ENTRIES[0])
+        entry["editorial_standards_url"] = None
+        mutated = tmp_path / "registry.json"
+        mutated.write_text(
+            json.dumps(
+                {
+                    "version": "1.0.0",
+                    "updated": "2026-10-20",
+                    "criteria_doc": "METHODOLOGY.md",
+                    "entries": [entry],
+                }
+            ),
+            encoding="utf-8",
         )
-        assert spec is not None and spec.loader is not None
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
 
-        assert module.validate() == []
+        problems = module.validate(mutated)
+
+        assert any("carries no evidence URL" in problem for problem in problems)
 
     @pytest.mark.parametrize(
         ("mutation", "expected_fragment"),
@@ -176,15 +254,7 @@ class TestValidatorScript:
     def test_the_validator_rejects_bad_top_level_fields(
         self, tmp_path: Path, mutation: dict, expected_fragment: str
     ) -> None:
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location(
-            "validate_registry", REGISTRY_PATH.parent / "validate_registry.py"
-        )
-        assert spec is not None and spec.loader is not None
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-
+        module = _load_validator()
         data = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
         data.update(mutation)
         mutated = tmp_path / "registry.json"

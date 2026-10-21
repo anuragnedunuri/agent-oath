@@ -106,8 +106,11 @@ export interface RegistryEntry {
   trust_tier: TrustTier;
   source_type: SourceType;
   editorial_standards_public: boolean;
+  editorial_standards_url: string | null;
   corrections_policy_public: boolean;
+  corrections_policy_url: string | null;
   ownership_transparent: boolean;
+  ownership_url: string | null;
   country: string;
   last_verified: string;
   notes: string;

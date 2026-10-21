@@ -236,10 +236,19 @@ class RegistryEntry(BaseModel):
     trust_tier: TrustTier
     source_type: SourceType
     editorial_standards_public: bool
+    editorial_standards_url: str | None = Field(
+        default=None, description="Public page evidencing the editorial standards claim."
+    )
     corrections_policy_public: bool
+    corrections_policy_url: str | None = Field(
+        default=None, description="Public page evidencing the corrections policy claim."
+    )
     ownership_transparent: bool
+    ownership_url: str | None = Field(
+        default=None, description="Public page evidencing the ownership claim."
+    )
     country: str = Field(min_length=2, max_length=2, description="ISO 3166-1 alpha-2 code.")
-    last_verified: str = Field(description="ISO 8601 date this entry was last checked.")
+    last_verified: str = Field(description="ISO 8601 date a human last checked the evidence.")
     notes: str = Field(default="", description="Optional and short. Not an essay field.")
 
     @staticmethod

@@ -1,0 +1,46 @@
+{
+  "disclosure": "These demo topics use a curated seed list, disclosed as such to evaluators. Each topic's URLs were chosen to exercise distinct retrieval and rating states, including one AI-generated article served by this backend and marked synthetic in its source.",
+  "topics": [
+    {
+      "topic_id": "climate-adaptation",
+      "title": "How are coastal cities adapting to sea level rise?",
+      "urls": [
+        { "url": "https://www.theguardian.com/environment/climate-crisis", "exercises": "fetchable established outlet; registry-rated once its entry passes verification (task 3.3), unrated until then" },
+        { "url": "https://www.reuters.com/sustainability/", "exercises": "bot-blocked outlet, honest partial summary" },
+        { "url": "https://ourworldindata.org", "exercises": "fetchable, unrated domain" },
+        { "url": "/demo/articles/climate-adaptation", "exercises": "AI-generated demo article served by this backend" }
+      ]
+    },
+    {
+      "topic_id": "ai-regulation",
+      "title": "What approaches are regulators taking to AI transparency?",
+      "urls": [
+        { "url": "https://www.theguardian.com/technology/artificialintelligenceai", "exercises": "fetchable established outlet; registry-rated once its entry passes verification (task 3.3), unrated until then" },
+        { "url": "https://www.reuters.com/technology/", "exercises": "bot-blocked outlet, honest partial summary" },
+        { "url": "https://arstechnica.com/ai/", "exercises": "unrated domain, js_required honest state" },
+        { "url": "https://ourworldindata.org", "exercises": "fetchable, unrated domain" },
+        { "url": "/demo/articles/ai-regulation", "exercises": "AI-generated demo article served by this backend" }
+      ]
+    },
+    {
+      "topic_id": "global-trade",
+      "title": "How is friendshoring changing global supply chains?",
+      "urls": [
+        { "url": "https://www.bbc.com/news/business", "exercises": "fetchable established outlet; registry-rated once its entry passes verification (task 3.3), unrated until then" },
+        { "url": "https://apnews.com/hub/economy", "exercises": "bot-blocked outlet, honest partial summary" },
+        { "url": "https://www.imf.org/en/Blogs", "exercises": "fetchable, unrated domain" },
+        { "url": "/demo/articles/global-trade", "exercises": "AI-generated demo article served by this backend" }
+      ]
+    },
+    {
+      "topic_id": "lunar-exploration",
+      "title": "What is driving the new wave of lunar missions?",
+      "urls": [
+        { "url": "https://www.theguardian.com/science/space", "exercises": "fetchable established outlet; registry-rated once its entry passes verification (task 3.3), unrated until then" },
+        { "url": "https://www.reuters.com/science/", "exercises": "bot-blocked outlet, honest partial summary" },
+        { "url": "https://spacenews.com", "exercises": "fetchable, unrated domain" },
+        { "url": "/demo/articles/lunar-exploration", "exercises": "AI-generated demo article served by this backend" }
+      ]
+    }
+  ]
+}

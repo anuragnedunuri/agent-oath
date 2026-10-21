@@ -3,9 +3,11 @@
 import threading
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
+from .agent.search import demo_article_path
 from .checks.synthetic import warm_up
 from .config import get_settings
 from .models import AnalyzeRequest, HealthResponse, TrustSummary
@@ -54,6 +56,19 @@ def analyze(request: AnalyzeRequest) -> TrustSummary:
     provenance lookups are blocking calls with explicit timeouts.
     """
     return build_trust_summary(request)
+
+
+@app.get("/demo/articles/{slug}", response_class=HTMLResponse, tags=["demo"])
+def demo_article(slug: str) -> HTMLResponse:
+    """Serve an AI-generated demo article for the Mode 2 seed topics (SPEC 6).
+
+    Each article is generated with a large language model and marked synthetic
+    in an HTML comment at the top of its source.
+    """
+    path = demo_article_path(slug)
+    if path is None:
+        raise HTTPException(status_code=404, detail="No demo article with that name exists.")
+    return HTMLResponse(path.read_text(encoding="utf-8"))
 
 
 @app.get("/health", response_model=HealthResponse, tags=["meta"])

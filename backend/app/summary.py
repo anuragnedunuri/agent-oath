@@ -13,7 +13,7 @@ content, or the model failed to load) never appears in `checks_completed`.
 from .checks import registry
 from .checks.provenance import check_provenance
 from .checks.synthetic import MODEL_ID, analyze_text
-from .fetcher import MIN_EXTRACTABLE_CHARS, fetch_url
+from .fetcher import MIN_EXTRACTABLE_CHARS, FetchResult, fetch_url
 from .models import (
     AnalyzeRequest,
     CheckName,
@@ -65,7 +65,16 @@ def _summarize_text(text: str) -> TrustSummary:
 
 
 def _summarize_url(url: str) -> TrustSummary:
-    fetched = fetch_url(url)
+    return summarize_fetch_result(fetch_url(url), url)
+
+
+def summarize_fetch_result(fetched: FetchResult, requested_url: str) -> TrustSummary:
+    """Assemble the TrustSummary for an already-fetched URL input.
+
+    Public so Mode 2 gathering (agent/search.py) can run the identical
+    assembly on sources it retrieves itself, including backend-served demo
+    articles that never go through a network fetch.
+    """
     checks: list[CheckName] = []
 
     # Synthetic: honest about what there was to analyze and what ran.
@@ -84,7 +93,7 @@ def _summarize_url(url: str) -> TrustSummary:
     # whole result stays traceable (INV-4).
     if fetched.host is not None:
         provenance = check_provenance(
-            url=fetched.final_url or url,
+            url=fetched.final_url or requested_url,
             host=fetched.host,
             html=fetched.html,
         )
@@ -96,8 +105,8 @@ def _summarize_url(url: str) -> TrustSummary:
                     name="retrieval_status",
                     raw_value=fetched.status,
                     interpretation=(
-                        "The address could not be resolved to a site, so provenance "
-                        "checks could not run."
+                        "No public website is associated with this input, so "
+                        "provenance checks could not run."
                     ),
                 )
             ]

@@ -7,10 +7,23 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-from .agent.search import demo_article_path
+from .agent.answer import generate_answer
+from .agent.approval import get_session, set_approval
+from .agent.search import create_agent_session, demo_article_path
 from .checks.synthetic import warm_up
 from .config import get_settings
-from .models import AnalyzeRequest, HealthResponse, TrustSummary
+from .models import (
+    AgentAnswerRequest,
+    AgentAnswerResponse,
+    AgentApproveRequest,
+    AgentApproveResponse,
+    AgentAskRequest,
+    AgentAskResponse,
+    AgentSourceView,
+    AnalyzeRequest,
+    HealthResponse,
+    TrustSummary,
+)
 from .summary import build_trust_summary
 
 SERVICE_NAME = "agent-oath-backend"
@@ -56,6 +69,72 @@ def analyze(request: AnalyzeRequest) -> TrustSummary:
     provenance lookups are blocking calls with explicit timeouts.
     """
     return build_trust_summary(request)
+
+
+@app.post("/api/agent/ask", response_model=AgentAskResponse, tags=["mode2"])
+def agent_ask(request: AgentAskRequest) -> AgentAskResponse:
+    """Gather candidate sources and return their Trust Summaries, no answer.
+
+    Runs the full Mode 1 analysis on every source and stores everything
+    server-side. The response carries summaries and ids only; extracted
+    source text never leaves the backend (INV-1).
+    """
+    try:
+        session = create_agent_session(
+            request.question, topic_id=request.topic_id, urls=request.urls
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from None
+    return AgentAskResponse(
+        session_id=session.session_id,
+        question=session.question,
+        gathering_mode=session.gathering_mode,
+        sources=[
+            AgentSourceView(
+                source_id=record.source_id,
+                url=record.url,
+                approved=record.approved,
+                trust_summary=record.trust_summary,
+            )
+            for record in session.sources.values()
+        ],
+    )
+
+
+@app.post("/api/agent/approve", response_model=AgentApproveResponse, tags=["mode2"])
+def agent_approve(request: AgentApproveRequest) -> AgentApproveResponse:
+    """Record one approve or reject decision in the server-side store.
+
+    The store is the ONLY record of approval (SPEC section 6 step 3).
+    """
+    record = set_approval(request.session_id, request.source_id, request.approved)
+    if record is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No such session or source. Gather sources first with /api/agent/ask.",
+        )
+    return AgentApproveResponse(
+        session_id=request.session_id,
+        source_id=request.source_id,
+        approved=record.approved is True,
+    )
+
+
+@app.post("/api/agent/answer", response_model=AgentAnswerResponse, tags=["mode2"])
+def agent_answer(request: AgentAnswerRequest) -> AgentAnswerResponse:
+    """Answer exclusively from approved sources in the store (INV-1).
+
+    Accepts a session id and nothing else; the request model rejects any
+    extra field. Zero approved sources yields an explicit refusal, never a
+    silent fall-back to general knowledge.
+    """
+    session = get_session(request.session_id)
+    if session is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No such session. Gather sources first with /api/agent/ask.",
+        )
+    return generate_answer(session)
 
 
 @app.get("/demo/articles/{slug}", response_class=HTMLResponse, tags=["demo"])

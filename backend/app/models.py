@@ -18,7 +18,7 @@ A malformed Trust Summary therefore cannot leave this process.
 
 from typing import Literal, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # The fixed uncertainty disclaimer (INV-3). Shown verbatim beside every score.
 AI_DETECTION_DISCLAIMER = (
@@ -323,3 +323,118 @@ class TrustSummary(BaseModel):
     synthetic: SyntheticResult
     provenance: ProvenanceResult
     credibility: CredibilityResult
+
+
+# --- Mode 2 agent contract (SPEC.md section 6, INV-1) -------------------------
+#
+# Every request model forbids unknown fields. That is a structural guarantee,
+# not a convention: the answer endpoint accepts a session id and nothing else,
+# so a request that tries to smuggle source text is rejected as a validation
+# error before any handler runs.
+
+
+class AgentAskRequest(BaseModel):
+    """Request body for POST /api/agent/ask. Exactly one gathering mode."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question: str = Field(min_length=1, max_length=2000)
+    topic_id: str | None = Field(default=None, description="A curated demo topic id.")
+    urls: list[str] | None = Field(default=None, description="Bring-your-own source URLs.")
+
+    @model_validator(mode="after")
+    def _exactly_one_mode(self) -> Self:
+        """Reject requests that choose both modes or neither."""
+        if (self.topic_id is None) == (self.urls is None):
+            raise ValueError("Choose exactly one: a demo topic, or your own list of URLs.")
+        return self
+
+
+class AgentSourceView(BaseModel):
+    """One gathered source as shown to the user: summary and approval state.
+
+    Deliberately excludes the extracted text. Source text lives server-side
+    only (INV-1); the frontend approves by id, never by content.
+    """
+
+    source_id: str
+    url: str
+    approved: bool | None
+    trust_summary: TrustSummary
+
+
+class AgentAskResponse(BaseModel):
+    """Response for POST /api/agent/ask: summaries, no answer."""
+
+    session_id: str
+    question: str
+    gathering_mode: Literal["seed", "byo"]
+    sources: list[AgentSourceView]
+
+
+class AgentApproveRequest(BaseModel):
+    """Request body for POST /api/agent/approve."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: str
+    source_id: str
+    approved: bool
+
+
+class AgentApproveResponse(BaseModel):
+    """Confirmation of one approval decision."""
+
+    session_id: str
+    source_id: str
+    approved: bool
+
+
+class AgentAnswerRequest(BaseModel):
+    """Request body for POST /api/agent/answer. A session id and NOTHING else.
+
+    There is no parameter that carries text (SPEC section 6). extra="forbid"
+    turns any attempt into a 422 before a handler ever sees it.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: str
+
+
+class AgentAnswerSource(BaseModel):
+    """Attribution for one source used in an answer."""
+
+    source_id: str
+    url: str
+    trust_tier: TrustTier | None
+
+
+class AgentAnswerResponse(BaseModel):
+    """Response for POST /api/agent/answer.
+
+    status 'no_approved_sources' is the explicit honest refusal: the agent
+    never falls back to general knowledge silently. 'llm_unavailable' is a
+    service problem stated as such (INV-2).
+    """
+
+    status: Literal["ok", "no_approved_sources", "llm_unavailable"]
+    answer: str | None = None
+    detail: str = Field(default="", description="Why there is no answer, when there is none.")
+    sources_used: list[AgentAnswerSource] = Field(default_factory=list)
+    model_id: str
+
+    @model_validator(mode="after")
+    def _status_shape(self) -> Self:
+        """An ok answer has text and sources; a refusal explains itself."""
+        if self.status == "ok":
+            if not self.answer:
+                raise ValueError("status 'ok' requires an answer.")
+            if not self.sources_used:
+                raise ValueError("status 'ok' requires the sources the answer used.")
+        else:
+            if self.answer is not None:
+                raise ValueError(f"status '{self.status}' must not carry an answer.")
+            if not self.detail:
+                raise ValueError(f"status '{self.status}' requires an honest detail.")
+        return self

@@ -93,3 +93,20 @@ def reset_store() -> None:
     """Empty the store. Tests only."""
     with _lock:
         _sessions.clear()
+
+
+def set_approval(session_id: str, source_id: str, approved: bool) -> SourceRecord | None:
+    """Record one approve or reject decision. Returns None for unknown ids.
+
+    This store is the ONLY record of approval (SPEC section 6). The answer
+    pipeline reads approval state from here and from nowhere else.
+    """
+    with _lock:
+        session = _sessions.get(session_id)
+        if session is None:
+            return None
+        record = session.sources.get(source_id)
+        if record is None:
+            return None
+        record.approved = approved
+        return record

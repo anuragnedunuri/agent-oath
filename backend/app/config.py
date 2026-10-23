@@ -23,6 +23,11 @@ class Settings(BaseSettings):
         description="Load the AI-text detection model at startup instead of first request.",
     )
 
+    anthropic_model: str = Field(
+        default="claude-sonnet-5",
+        description="Pinned model id for Mode 2 answers (SPEC section 6).",
+    )
+
     # Secrets. Empty until the task that needs them; the app must start without them.
     anthropic_api_key: str = ""
     hf_api_token: str = ""

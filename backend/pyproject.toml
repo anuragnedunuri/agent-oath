@@ -21,7 +21,7 @@ ignore = [
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D100", "D101", "D102", "D103", "D104", "ANN401"]
+"tests/*" = ["D100", "D101", "D102", "D103", "D104", "D107", "ANN401"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

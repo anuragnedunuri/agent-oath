@@ -15,3 +15,4 @@ tldextract==5.3.2
 python-whois==0.9.6
 torch==2.14.0+cpu
 transformers==5.17.0
+anthropic==2.1.0

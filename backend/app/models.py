@@ -438,3 +438,29 @@ class AgentAnswerResponse(BaseModel):
             if not self.detail:
                 raise ValueError(f"status '{self.status}' requires an honest detail.")
         return self
+
+
+class AgentTopicSummary(BaseModel):
+    """One curated demo topic as offered to the picker."""
+
+    topic_id: str
+    title: str
+
+
+class AgentTopicsResponse(BaseModel):
+    """Response for GET /api/agent/topics."""
+
+    disclosure: str = Field(description="Shown verbatim: the seed list is curated.")
+    topics: list[AgentTopicSummary]
+
+
+class LlmPayloadDebugResponse(BaseModel):
+    """Response for GET /api/agent/debug/payload (dev mode only).
+
+    Exists so the payload-isolation proof can be shown on screen: the exact
+    request body of the most recent LLM call, or an honest explanation of
+    why there is none.
+    """
+
+    payload: dict | None
+    detail: str

@@ -1,5 +1,6 @@
 """FastAPI application: CORS, routers, and the /health endpoint."""
 
+import json as _json
 import logging
 import threading
 from contextlib import asynccontextmanager
@@ -8,9 +9,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-from .agent.answer import generate_answer
+from .agent.answer import generate_answer, get_last_llm_payload
 from .agent.approval import get_session, set_approval
-from .agent.search import create_agent_session, demo_article_path
+from .agent.search import (
+    SEED_TOPICS_PATH,
+    create_agent_session,
+    demo_article_path,
+    load_seed_topics,
+)
 from .checks.synthetic import warm_up
 from .config import get_settings
 from .models import (
@@ -21,8 +27,11 @@ from .models import (
     AgentAskRequest,
     AgentAskResponse,
     AgentSourceView,
+    AgentTopicsResponse,
+    AgentTopicSummary,
     AnalyzeRequest,
     HealthResponse,
+    LlmPayloadDebugResponse,
     TrustSummary,
 )
 from .summary import build_trust_summary
@@ -77,6 +86,43 @@ def analyze(request: AnalyzeRequest) -> TrustSummary:
     provenance lookups are blocking calls with explicit timeouts.
     """
     return build_trust_summary(request)
+
+
+@app.get("/api/agent/topics", response_model=AgentTopicsResponse, tags=["mode2"])
+def agent_topics() -> AgentTopicsResponse:
+    """The curated demo topics, with the curation disclosed (SPEC 6)."""
+    raw = _json.loads(SEED_TOPICS_PATH.read_text(encoding="utf-8"))
+    return AgentTopicsResponse(
+        disclosure=raw["disclosure"],
+        topics=[
+            AgentTopicSummary(topic_id=topic.topic_id, title=topic.title)
+            for topic in load_seed_topics()
+        ],
+    )
+
+
+@app.get("/api/agent/debug/payload", response_model=LlmPayloadDebugResponse, tags=["mode2"])
+def agent_debug_payload() -> LlmPayloadDebugResponse:
+    """Dev mode only: the exact request body of the most recent LLM call.
+
+    Lets the payload-isolation proof be shown on screen (SPEC 6). Outside
+    dev mode this surface does not exist.
+    """
+    if settings.app_env != "dev":
+        raise HTTPException(status_code=404, detail="Not available outside dev mode.")
+    payload = get_last_llm_payload()
+    if payload is None:
+        return LlmPayloadDebugResponse(
+            payload=None,
+            detail=(
+                "No LLM call has been made yet in this server process. Approve a source "
+                "and request an answer first."
+            ),
+        )
+    return LlmPayloadDebugResponse(
+        payload=payload,
+        detail="The exact request body of the most recent LLM call in this process.",
+    )
 
 
 @app.post("/api/agent/ask", response_model=AgentAskResponse, tags=["mode2"])

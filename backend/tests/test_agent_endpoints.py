@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 import app.agent.answer as answer_module
 import app.agent.search as search_module
 import app.checks.synthetic as synthetic_module
+from app.agent.answer import reset_last_llm_payload
 from app.agent.approval import get_session, reset_store
 from app.config import get_settings
 from app.fetcher import FetchResult
@@ -24,6 +25,7 @@ BODY = ("An ordinary paragraph of source text for the agent to consider. " * 30)
 @pytest.fixture(autouse=True)
 def clean_store() -> None:
     reset_store()
+    reset_last_llm_payload()
 
 
 @pytest.fixture(autouse=True)
@@ -304,3 +306,39 @@ class TestAnswer:
         for used in answer["sources_used"]:
             assert "trust_tier" in used
             assert used["url"]
+
+
+class TestTopicsAndDebugSurfaces:
+    def test_topics_lists_the_curated_demo_topics_with_disclosure(self, client: TestClient) -> None:
+        body = client.get("/api/agent/topics").json()
+
+        assert "curated" in body["disclosure"]
+        assert len(body["topics"]) == 4
+        assert all(t["topic_id"] and t["title"] for t in body["topics"])
+
+    def test_debug_payload_shows_the_last_request_body_in_dev(
+        self, client: TestClient, llm: RecordingLlm
+    ) -> None:
+        empty = client.get("/api/agent/debug/payload").json()
+        assert empty["payload"] is None
+
+        body = ask(client)
+        client.post(
+            "/api/agent/approve",
+            json={
+                "session_id": body["session_id"],
+                "source_id": body["sources"][0]["source_id"],
+                "approved": True,
+            },
+        )
+        client.post("/api/agent/answer", json={"session_id": body["session_id"]})
+
+        debug = client.get("/api/agent/debug/payload").json()
+        assert debug["payload"] == llm.calls[0]
+
+    def test_debug_payload_does_not_exist_outside_dev(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(get_settings(), "app_env", "prod")
+
+        assert client.get("/api/agent/debug/payload").status_code == 404

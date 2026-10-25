@@ -303,3 +303,180 @@ details summary {
 .app-footer .warn {
   color: #8a4b1f;
 }
+
+/* Mode 2 agent demo */
+
+.topic-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.topic-chip {
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #d7d7d3;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.topic-chip.active {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: #fff;
+}
+
+.agent-sources h3 {
+  font-size: 1.05rem;
+  margin: 1.4rem 0 0.6rem;
+}
+
+.agent-source {
+  margin-bottom: 1.1rem;
+}
+
+.agent-source-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #e2e2df;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: #f6f6f4;
+  font-size: 0.86rem;
+}
+
+.agent-source-url {
+  flex: 1;
+  min-width: 12rem;
+  color: #5b5b57;
+  word-break: break-all;
+}
+
+.approval-badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.approval-badge.approved {
+  background: #e3f1e9;
+  color: #2f6f4f;
+}
+
+.approval-badge.rejected {
+  background: #f8e9e4;
+  color: #8a3520;
+}
+
+.approval-badge.undecided {
+  background: #efefec;
+  color: #6b6b66;
+}
+
+.agent-source-actions button {
+  font: inherit;
+  font-size: 0.84rem;
+  padding: 0.25rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 0.35rem;
+}
+
+.agent-source-actions .approve {
+  border: 1px solid #2f6f4f;
+  background: #2f6f4f;
+  color: #fff;
+}
+
+.agent-source-actions .reject {
+  border: 1px solid #b9b9b3;
+  background: #fff;
+  color: #4a4a46;
+}
+
+.agent-source-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.agent-source .trust-card {
+  border-radius: 0 0 10px 10px;
+}
+
+.answer-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin: 0.6rem 0 1.2rem;
+}
+
+.answer-panel {
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+  margin: 1rem 0;
+}
+
+.answer-panel h3 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.answer-panel.ok {
+  border: 1px solid #cfe0d6;
+  background: #f4faf6;
+}
+
+.answer-panel.refusal {
+  border: 1px solid #e8d9b5;
+  background: #fbf6e9;
+}
+
+.answer-panel.unavailable {
+  border: 1px solid #e3c0b4;
+  background: #fbf1ee;
+}
+
+.answer-text {
+  white-space: pre-wrap;
+}
+
+.attribution {
+  margin: 0.4rem 0;
+  padding-left: 1.1rem;
+}
+
+.attribution li {
+  margin: 0.25rem 0;
+  word-break: break-all;
+}
+
+.tier-unrated {
+  color: #6b6b66;
+}
+
+.payload-panel {
+  margin-top: 1.2rem;
+  border: 1px dashed #b9b9b3;
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+  background: #fbfbfa;
+}
+
+.payload-json {
+  max-height: 24rem;
+  overflow: auto;
+  font-size: 0.74rem;
+  background: #1a1a1a;
+  color: #e8e8e4;
+  padding: 0.8rem;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

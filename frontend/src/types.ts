@@ -133,3 +133,48 @@ export interface TrustSummary {
   provenance: ProvenanceResult;
   credibility: CredibilityResult;
 }
+
+// --- Mode 2 agent contract (SPEC.md section 6), mirroring backend models ----
+
+export interface AgentSourceView {
+  source_id: string;
+  url: string;
+  approved: boolean | null;
+  trust_summary: TrustSummary;
+}
+
+export interface AgentAskResponse {
+  session_id: string;
+  question: string;
+  gathering_mode: 'seed' | 'byo';
+  sources: AgentSourceView[];
+}
+
+export interface AgentAnswerSource {
+  source_id: string;
+  url: string;
+  trust_tier: TrustTier | null;
+}
+
+export interface AgentAnswerResponse {
+  status: 'ok' | 'no_approved_sources' | 'llm_unavailable';
+  answer: string | null;
+  detail: string;
+  sources_used: AgentAnswerSource[];
+  model_id: string;
+}
+
+export interface AgentTopicSummary {
+  topic_id: string;
+  title: string;
+}
+
+export interface AgentTopicsResponse {
+  disclosure: string;
+  topics: AgentTopicSummary[];
+}
+
+export interface LlmPayloadDebugResponse {
+  payload: Record<string, unknown> | null;
+  detail: string;
+}

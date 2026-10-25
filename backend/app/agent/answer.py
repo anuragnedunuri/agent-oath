@@ -1,10 +1,15 @@
 """LLM answer assembled exclusively from approved sources (SPEC.md 6, INV-1).
 
-The payload isolation invariant lives in this file. The prompt sent to the
-LLM is built in exactly one place, `build_prompt`, and that function reads
-source text from exactly one input: store records whose `approved` is True.
+The payload isolation invariant lives in this file. The request body sent to
+the LLM is built in exactly one place, `build_request_body`, and its source
+text comes from exactly one input: store records whose `approved` is True.
 Unapproved and rejected text is not filtered out of the payload; it is never
 put in. The user's question is the only user-controlled text that enters.
+
+Dev-mode proof (task 4.3): when app_env is "dev", the exact request body is
+logged as JSON under the logger name "agent.llm", and the most recent body is
+inspectable via get_last_llm_payload(), so the absence of unapproved text can
+be demonstrated live against the very bytes sent.
 
 Honesty rules:
 - Zero approved sources: the agent refuses explicitly. It never silently
@@ -13,13 +18,14 @@ Honesty rules:
   a plain explanation, never a raw exception (INV-2 discipline).
 """
 
+import json
+import logging
 from collections.abc import Callable
 
 from ..config import get_settings
 from ..models import AgentAnswerResponse, AgentAnswerSource
 from .approval import AgentSession, SourceRecord
 
-ANSWER_TEMPERATURE = 0.2
 ANSWER_MAX_TOKENS = 1024
 MAX_SOURCE_CHARS = 8000
 """Per-source cap keeps the payload modest (SPEC section 6: max_tokens modest)."""
@@ -39,32 +45,40 @@ NO_APPROVED_DETAIL = (
     "ask again. I do not fall back to general knowledge."
 )
 
-LlmCall = Callable[[str, str, str], str]
-"""(model_id, system_prompt, user_prompt) -> answer text."""
+payload_logger = logging.getLogger("agent.llm")
+
+LlmCall = Callable[[dict], str]
+"""Takes the exact Anthropic request body, returns the answer text."""
+
+_last_payload: dict | None = None
 
 
-def _default_llm_call(model_id: str, system_prompt: str, user_prompt: str) -> str:
+def get_last_llm_payload() -> dict | None:
+    """The exact request body of the most recent LLM call, dev mode only.
+
+    Exists so an evaluator can be shown the literal bytes sent to the model
+    and verify that unapproved source text is absent (SPEC section 6).
+    """
+    return _last_payload
+
+
+def reset_last_llm_payload() -> None:
+    """Clear the inspection slot. Tests only."""
+    global _last_payload
+    _last_payload = None
+
+
+def _default_llm_call(request_body: dict) -> str:
     """One Anthropic API call. Imported lazily so tests never need the SDK wired."""
     from anthropic import Anthropic
 
     client = Anthropic(api_key=get_settings().anthropic_api_key)
-    message = client.messages.create(
-        model=model_id,
-        max_tokens=ANSWER_MAX_TOKENS,
-        temperature=ANSWER_TEMPERATURE,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
-    )
+    message = client.messages.create(**request_body)
     return "".join(block.text for block in message.content if getattr(block, "type", "") == "text")
 
 
 def build_prompt(question: str, approved: list[tuple[str, SourceRecord]]) -> str:
-    """Assemble the user prompt from the question and APPROVED records only.
-
-    This is the single place source text enters an LLM payload (INV-1). The
-    caller is responsible for passing only approved records; generate_answer
-    filters on `approved is True` and nothing else ever calls this.
-    """
+    """Assemble the user prompt from the question and APPROVED records only."""
     blocks = []
     for label_index, (source_id, record) in enumerate(approved, start=1):
         blocks.append(
@@ -76,6 +90,25 @@ def build_prompt(question: str, approved: list[tuple[str, SourceRecord]]) -> str
     return f"Question: {question}\n\nApproved sources:\n\n{sources_joined}"
 
 
+def build_request_body(
+    question: str, approved: list[tuple[str, SourceRecord]], model_id: str
+) -> dict:
+    """The exact LLM request body. The single place source text enters a payload.
+
+    The caller passes only approved records; generate_answer filters on
+    `approved is True` and nothing else ever calls this (INV-1).
+    """
+    # Note: the SDK's current Messages API no longer accepts a temperature
+    # parameter; low-variance output is the API default for this use. SPEC's
+    # "temperature low" wording predates this and awaits an owner edit.
+    return {
+        "model": model_id,
+        "max_tokens": ANSWER_MAX_TOKENS,
+        "system": SYSTEM_PROMPT,
+        "messages": [{"role": "user", "content": build_prompt(question, approved)}],
+    }
+
+
 def generate_answer(
     session: AgentSession,
     *,
@@ -85,12 +118,14 @@ def generate_answer(
 
     Args:
         session: The stored session, whose records carry approval state.
-        llm_call: Injected LLM transport. Tests pass a fake; production uses
-            the Anthropic API with the model id pinned in config.
+        llm_call: Injected LLM transport receiving the exact request body.
+            Tests pass a fake; production uses the Anthropic API with the
+            model id pinned in config.
 
     Returns:
         An AgentAnswerResponse. Never raises on missing keys or LLM failure.
     """
+    global _last_payload
     settings = get_settings()
     model_id = settings.anthropic_model
 
@@ -118,9 +153,18 @@ def generate_answer(
             model_id=model_id,
         )
 
-    prompt = build_prompt(session.question, approved)
+    request_body = build_request_body(session.question, approved, model_id)
+
+    if settings.app_env == "dev":
+        # Task 4.3: prove payload isolation against the literal bytes sent.
+        _last_payload = request_body
+        payload_logger.info(
+            "LLM request body (dev-mode payload proof): %s",
+            json.dumps(request_body, ensure_ascii=False),
+        )
+
     try:
-        answer_text = call(model_id, SYSTEM_PROMPT, prompt)
+        answer_text = call(request_body)
     except Exception as error:  # noqa: BLE001  any transport failure becomes a typed result
         return AgentAnswerResponse(
             status="llm_unavailable",

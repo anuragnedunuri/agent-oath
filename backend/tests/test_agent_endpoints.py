@@ -65,14 +65,14 @@ def fake_fetch(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class RecordingLlm:
-    """Fake LLM transport that records exactly what it was asked."""
+    """Fake LLM transport that records the exact request body it received."""
 
     def __init__(self, reply: str = "A cited answer [S1].") -> None:
         self.reply = reply
-        self.calls: list[tuple[str, str, str]] = []
+        self.calls: list[dict] = []
 
-    def __call__(self, model_id: str, system_prompt: str, user_prompt: str) -> str:
-        self.calls.append((model_id, system_prompt, user_prompt))
+    def __call__(self, request_body: dict) -> str:
+        self.calls.append(request_body)
         return self.reply
 
 
@@ -219,12 +219,13 @@ class TestAnswer:
         assert answer["status"] == "ok"
         assert answer["answer"] == "A cited answer [S1]."
         assert [s["source_id"] for s in answer["sources_used"]] == [approved_id]
-        (model_id, system_prompt, user_prompt) = llm.calls[0]
-        assert model_id == get_settings().anthropic_model
+        body = llm.calls[0]
+        user_prompt = body["messages"][0]["content"]
+        assert body["model"] == get_settings().anthropic_model
         assert "UNIQUE::https://a.org/1" in user_prompt
         assert "UNIQUE::https://b.org/2" not in user_prompt
         assert "UNIQUE::https://c.org/3" not in user_prompt
-        assert "ONLY the text inside the provided <source> blocks" in system_prompt
+        assert "ONLY the text inside the provided <source> blocks" in body["system"]
 
     def test_answer_request_carries_a_session_id_and_nothing_else(
         self, client: TestClient, llm: RecordingLlm
@@ -259,7 +260,7 @@ class TestAnswer:
     def test_llm_failure_becomes_a_typed_result_not_an_exception(
         self, client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        def broken(model_id: str, system_prompt: str, user_prompt: str) -> str:
+        def broken(request_body: dict) -> str:
             raise TimeoutError("llm timeout")
 
         monkeypatch.setattr(answer_module, "_default_llm_call", broken)

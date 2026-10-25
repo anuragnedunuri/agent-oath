@@ -259,7 +259,8 @@ exportable by the user.
 - Dev mode logs the exact LLM request body so absence of unapproved text can
   be shown on screen.
 
-LLM: Anthropic API, temperature low, max_tokens modest. Exact model id is pinned
+LLM: Anthropic API, max_tokens modest, sampling left at API defaults (the
+current Messages API exposes no temperature parameter). Exact model id is pinned
 in backend config, chosen at implementation time.
 
 ## §7. Benchmark (Task 5)

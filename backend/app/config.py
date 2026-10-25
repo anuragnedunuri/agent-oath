@@ -1,10 +1,10 @@
 """Application settings, loaded from environment variables only (never from code)."""
 
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -17,7 +17,11 @@ class Settings(BaseSettings):
     )
 
     app_env: Literal["dev", "prod"] = "dev"
-    cors_allow_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    # NoDecode: dotenv values for list fields are otherwise JSON-decoded before
+    # the comma-splitting validator can run, crashing on plain comma strings.
+    cors_allow_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["http://localhost:5173"]
+    )
     preload_detector: bool = Field(
         default=True,
         description="Load the AI-text detection model at startup instead of first request.",

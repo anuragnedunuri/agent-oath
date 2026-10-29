@@ -131,6 +131,25 @@ export default function AgentDemo() {
     }
   }
 
+  async function exportSession() {
+    if (!session) return;
+    setError(null);
+    try {
+      const response = await fetch('/api/agent/export/' + session.session_id);
+      if (!response.ok)
+        throw new Error('The export request failed (HTTP ' + response.status + ').');
+      const record = await response.json();
+      const blob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'agent-session-' + session.session_id.slice(0, 8) + '.json';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : 'The export request failed.');
+    }
+  }
+
   async function requestAnswer() {
     if (!session) return;
     setAnswering(true);
@@ -308,6 +327,9 @@ export default function AgentDemo() {
               {approvedCount} of {session.sources.length} sources approved. The agent can only use
               approved sources.
             </span>
+            <button type="button" className="export" onClick={() => void exportSession()}>
+              Export session record
+            </button>
           </div>
         </div>
       )}

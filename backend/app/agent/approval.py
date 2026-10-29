@@ -7,10 +7,12 @@ and the answer endpoint (task 4.2) resolves approved source IDs against this
 store exclusively. That is what makes prompt injection through rejected
 sources structurally impossible rather than merely discouraged.
 
-Task 4.1 builds the store and fills it via gathering. The approve and answer
-endpoints arrive in task 4.2; the exportable audit record in task 4.5.
-In-memory and per-process by design: sessions are demo-lived, and the store
-never persists across restarts.
+Every store event carries a timestamp and lands in the session's audit
+trail (task 4.5, SPEC section 6): session creation, each gathered source,
+each approve or reject decision, and each answer request with the source ids
+used. GET /api/agent/export/{session_id} returns the full record. In-memory
+and per-process by design: sessions are demo-lived, the record lives for the
+session, and nothing persists across sessions or restarts.
 """
 
 import threading
@@ -23,7 +25,15 @@ from ..models import TrustSummary
 
 
 def _now_iso() -> str:
-    return datetime.now(UTC).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="milliseconds")
+
+
+class AuditEvent(BaseModel):
+    """One timestamped store event in a session's audit trail."""
+
+    at: str
+    event: str
+    data: dict = Field(default_factory=dict)
 
 
 class SourceRecord(BaseModel):
@@ -51,6 +61,10 @@ class AgentSession(BaseModel):
     created_at: str
     gathering_mode: str = Field(description="'seed' or 'byo', disclosed in the UI.")
     sources: dict[str, SourceRecord] = Field(default_factory=dict)
+    events: list[AuditEvent] = Field(
+        default_factory=list,
+        description="Timestamped audit trail of every store event (SPEC section 6).",
+    )
 
 
 _lock = threading.Lock()
@@ -69,14 +83,34 @@ def create_session(
         created_at=_now_iso(),
         gathering_mode=gathering_mode,
     )
+    session.events.append(
+        AuditEvent(
+            at=session.created_at,
+            event="session_created",
+            data={"question": question, "gathering_mode": gathering_mode},
+        )
+    )
     for url, extracted_text, trust_summary in gathered:
         source_id = uuid.uuid4().hex[:12]
+        gathered_at = _now_iso()
         session.sources[source_id] = SourceRecord(
             source_id=source_id,
             url=url,
             extracted_text=extracted_text,
             trust_summary=trust_summary,
-            gathered_at=_now_iso(),
+            gathered_at=gathered_at,
+        )
+        session.events.append(
+            AuditEvent(
+                at=gathered_at,
+                event="source_gathered",
+                data={
+                    "source_id": source_id,
+                    "url": url,
+                    "extracted_text_length": len(extracted_text),
+                    "retrieval_status": trust_summary.retrieval.status,
+                },
+            )
         )
     with _lock:
         _sessions[session.session_id] = session
@@ -109,4 +143,26 @@ def set_approval(session_id: str, source_id: str, approved: bool) -> SourceRecor
         if record is None:
             return None
         record.approved = approved
+        session.events.append(
+            AuditEvent(
+                at=_now_iso(),
+                event="approval_set",
+                data={"source_id": source_id, "approved": approved},
+            )
+        )
         return record
+
+
+def record_answer_event(session_id: str, status: str, source_ids_used: list[str]) -> None:
+    """Append the answer request and its outcome to the audit trail."""
+    with _lock:
+        session = _sessions.get(session_id)
+        if session is None:
+            return
+        session.events.append(
+            AuditEvent(
+                at=_now_iso(),
+                event="answer_requested",
+                data={"status": status, "source_ids_used": source_ids_used},
+            )
+        )

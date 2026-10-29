@@ -464,3 +464,37 @@ class LlmPayloadDebugResponse(BaseModel):
 
     payload: dict | None
     detail: str
+
+
+class ExportedAuditEvent(BaseModel):
+    """One timestamped store event, as exported."""
+
+    at: str
+    event: str
+    data: dict
+
+
+class ExportedSource(BaseModel):
+    """One source as exported: everything except the extracted text itself.
+
+    The export reports the extracted-text length per SPEC section 6; the text
+    stays server-side, consistent with INV-1 hygiene.
+    """
+
+    source_id: str
+    url: str
+    extracted_text_length: int
+    approved: bool | None
+    gathered_at: str
+    trust_summary: TrustSummary
+
+
+class AgentSessionExport(BaseModel):
+    """Response for GET /api/agent/export/{session_id}: the full session record."""
+
+    session_id: str
+    question: str
+    gathering_mode: Literal["seed", "byo"]
+    created_at: str
+    sources: list[ExportedSource]
+    events: list[ExportedAuditEvent]

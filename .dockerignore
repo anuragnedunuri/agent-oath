@@ -1,0 +1,19 @@
+# Never ship secrets or private working files in the image.
+.env
+.env.*
+!.env.example
+.notes/
+CLAUDE.md
+TASKS.md
+EXPLAIN.md
+
+# Not needed in the backend image.
+.git/
+.github/
+frontend/
+benchmark/
+backend/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+registry/__pycache__/

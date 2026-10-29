@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: agent-oath-backend
+    runtime: docker
+    plan: standard # 2 GB RAM, required for local model inference (SPEC section 8)
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: PRELOAD_DETECTOR
+        value: "1"
+      - key: ANTHROPIC_API_KEY
+        sync: false # set in the Render dashboard, never in the repository
+      - key: CORS_ALLOW_ORIGINS
+        value: https://REPLACE-WITH-YOUR-VERCEL-URL.vercel.app

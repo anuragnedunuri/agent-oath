@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from .agent.answer import generate_answer, get_last_llm_payload
-from .agent.approval import get_session, set_approval
+from .agent.approval import get_session, record_answer_event, set_approval
 from .agent.search import (
     SEED_TOPICS_PATH,
     create_agent_session,
@@ -26,10 +26,13 @@ from .models import (
     AgentApproveResponse,
     AgentAskRequest,
     AgentAskResponse,
+    AgentSessionExport,
     AgentSourceView,
     AgentTopicsResponse,
     AgentTopicSummary,
     AnalyzeRequest,
+    ExportedAuditEvent,
+    ExportedSource,
     HealthResponse,
     LlmPayloadDebugResponse,
     TrustSummary,
@@ -188,7 +191,51 @@ def agent_answer(request: AgentAnswerRequest) -> AgentAnswerResponse:
             status_code=404,
             detail="No such session. Gather sources first with /api/agent/ask.",
         )
-    return generate_answer(session)
+    response = generate_answer(session)
+    record_answer_event(
+        request.session_id,
+        response.status,
+        [used.source_id for used in response.sources_used],
+    )
+    return response
+
+
+@app.get("/api/agent/export/{session_id}", response_model=AgentSessionExport, tags=["mode2"])
+def agent_export(session_id: str) -> AgentSessionExport:
+    """Export the full session audit record as JSON (SPEC 6, task 4.5).
+
+    The record carries the question, every gathered source with its Trust
+    Summary and extracted-text length, every approval decision, and every
+    answer request, each with a timestamp. Source text itself stays
+    server-side. The record lives for the session only.
+    """
+    session = get_session(session_id)
+    if session is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No such session. The record lives for the session only.",
+        )
+    return AgentSessionExport(
+        session_id=session.session_id,
+        question=session.question,
+        gathering_mode=session.gathering_mode,
+        created_at=session.created_at,
+        sources=[
+            ExportedSource(
+                source_id=record.source_id,
+                url=record.url,
+                extracted_text_length=len(record.extracted_text),
+                approved=record.approved,
+                gathered_at=record.gathered_at,
+                trust_summary=record.trust_summary,
+            )
+            for record in session.sources.values()
+        ],
+        events=[
+            ExportedAuditEvent(at=event.at, event=event.event, data=event.data)
+            for event in session.events
+        ],
+    )
 
 
 @app.get("/demo/articles/{slug}", response_class=HTMLResponse, tags=["demo"])

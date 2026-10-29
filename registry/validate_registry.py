@@ -25,7 +25,7 @@ from app.models import RegistryEntry  # noqa: E402
 
 REGISTRY_PATH = HERE / "registry.json"
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
-MAX_NOTES_CHARS = 200
+MAX_NOTES_CHARS = 700  # owner evidence quotes from the 2026-10-27 pass run long
 
 _extract = tldextract.TLDExtract(suffix_list_urls=())
 

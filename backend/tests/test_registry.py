@@ -74,7 +74,7 @@ class TestRepositoryRegistry:
         registry = load_registry()
 
         assert registry is not None
-        assert registry.version == "1.1.1"
+        assert registry.version == "1.2.0"
         assert registry.criteria_doc == "METHODOLOGY.md"
 
     def test_every_entry_honours_evidence_and_tier_rules(self) -> None:
@@ -153,7 +153,7 @@ class TestLookupMisses:
 
         assert result.status == "unrated"
         assert "no domain" in result.unrated_explanation
-        assert result.registry_version == "1.1.1"
+        assert result.registry_version == "1.2.0"
 
 
 class TestRegistryUnavailable:

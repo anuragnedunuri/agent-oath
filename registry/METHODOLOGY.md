@@ -41,6 +41,17 @@ human confirms each page before an entry counts as verified, and
 `last_verified` records that human check. Entries whose evidence was located
 by tooling but not yet humanly confirmed say so in `notes`.
 
+## Ownership clarification (2026-10-27)
+
+`ownership_transparent` is judged solely on pages published by the outlet or
+its parent organization. Third-party descriptions of ownership, however
+reliable (encyclopedias, press databases, news coverage), are not counted as
+evidence. Disclosed state or public funding on an official page counts as
+transparent: the criterion measures disclosure, not independence. When a site
+cannot be reached during review, that failure is recorded in the entry notes
+and is not treated as proof of absence; the boolean nonetheless stays No
+until an official page has actually been opened and read.
+
 ## The tier rule
 
 The trust tier derives mechanically from the three booleans:

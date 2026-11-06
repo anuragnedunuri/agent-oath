@@ -4,15 +4,15 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REPLACE-WITH-RENDER-URL.onrender.com/api/:path*"
+      "destination": "https://agent-oath.onrender.com/api/:path*"
     },
     {
       "source": "/health",
-      "destination": "https://REPLACE-WITH-RENDER-URL.onrender.com/health"
+      "destination": "https://agent-oath.onrender.com/health"
     },
     {
       "source": "/demo/:path*",
-      "destination": "https://REPLACE-WITH-RENDER-URL.onrender.com/demo/:path*"
+      "destination": "https://agent-oath.onrender.com/demo/:path*"
     }
   ]
 }

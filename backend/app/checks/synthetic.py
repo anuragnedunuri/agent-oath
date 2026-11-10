@@ -17,8 +17,12 @@ model files, or the network. If the model cannot be loaded at runtime, the
 result says so plainly instead of raising (INV-2).
 """
 
+import logging
+import math
+import os
 import threading
 from collections.abc import Callable
+from pathlib import Path
 
 from ..models import SyntheticResult, SyntheticSection
 
@@ -74,6 +78,26 @@ def _excerpt(section: str) -> str:
     return " ".join(section.split()[:EXCERPT_WORDS])
 
 
+def _effective_cpu_count() -> int:
+    """The CPU budget actually available to this process, container-aware.
+
+    torch defaults its thread pool to the host's core count, which inside a
+    CPU-limited container (for example a 1 vCPU cloud instance) oversubscribes
+    threads against a throttled quota and slows inference dramatically. Order
+    of truth: cgroup v2 quota, then scheduler affinity, then os.cpu_count().
+    """
+    try:
+        quota = Path("/sys/fs/cgroup/cpu.max").read_text(encoding="ascii").split()
+        if quota and quota[0] != "max":
+            return max(1, math.ceil(int(quota[0]) / int(quota[1])))
+    except (OSError, ValueError, IndexError):
+        pass
+    try:
+        return max(1, len(os.sched_getaffinity(0)))  # type: ignore[attr-defined]
+    except AttributeError:
+        return max(1, os.cpu_count() or 1)
+
+
 def _load_default_scorer() -> tuple[SectionScorer, str]:
     """Load the detection model once, process-wide.
 
@@ -87,6 +111,15 @@ def _load_default_scorer() -> tuple[SectionScorer, str]:
 
         import torch
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+        cpus = _effective_cpu_count()
+        try:
+            torch.set_num_threads(cpus)
+        except RuntimeError:
+            pass
+        logging.getLogger("agent.synthetic").info(
+            "torch inference threads set to %d (host reports %s cpus)", cpus, os.cpu_count()
+        )
 
         tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
         model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)

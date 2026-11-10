@@ -136,3 +136,13 @@ class TestScoring:
         assert result.model_name == MODEL_ID
         assert result.model_version == "test-rev"
         assert result.disclaimer == AI_DETECTION_DISCLAIMER
+
+
+class TestCpuBudget:
+    def test_effective_cpu_count_is_a_sane_positive_integer(self) -> None:
+        from app.checks.synthetic import _effective_cpu_count
+
+        count = _effective_cpu_count()
+
+        assert isinstance(count, int)
+        assert count >= 1

@@ -53,6 +53,17 @@ CI runs the backend lint and test jobs and the frontend format and build jobs on
 every push and pull request. See
 [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
+## Performance notes
+
+Measured, not estimated. On a development laptop, AI-text analysis runs at
+roughly a quarter second per section. On the deployed 1 vCPU / 2 GB
+instance it runs at several seconds per section, so most URL analyses
+complete within 60 seconds and long pages are bounded by the client-side
+stop, which reports what completed rather than hanging. Scores are
+deterministic across both environments for the same input and model
+revision. Inference threads are capped to the container's actual CPU
+budget at startup.
+
 ## Status
 
 Through task 3.1: scaffold, locked API contract, URL fetcher with its honest

@@ -24,9 +24,3 @@ dist-ssr/
 .idea/
 .DS_Store
 Thumbs.db
-
-# Private working files, never committed
-CLAUDE.md
-TASKS.md
-EXPLAIN.md
-.notes/

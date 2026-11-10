@@ -1,11 +1,8 @@
-# Never ship secrets or private working files in the image.
+# Never ship secrets in the image. (The image copies only backend/ and
+# registry/, so root-level working files never enter it regardless.)
 .env
 .env.*
 !.env.example
-.notes/
-CLAUDE.md
-TASKS.md
-EXPLAIN.md
 
 # Not needed in the backend image.
 .git/

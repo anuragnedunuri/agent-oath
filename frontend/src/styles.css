@@ -444,7 +444,35 @@ details summary {
 }
 
 .answer-text {
-  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.answer-text p {
+  margin: 0.5rem 0;
+}
+
+.answer-text ul,
+.answer-text ol {
+  margin: 0.5rem 0;
+  padding-left: 1.3rem;
+}
+
+.answer-text li {
+  margin: 0.2rem 0;
+}
+
+.answer-text h1,
+.answer-text h2,
+.answer-text h3,
+.answer-text h4 {
+  margin: 0.8rem 0 0.3rem;
+  font-size: 1rem;
+}
+
+.answer-text code {
+  background: #f1f1ee;
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
 }
 
 .attribution {

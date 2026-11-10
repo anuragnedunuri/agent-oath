@@ -120,6 +120,24 @@ class TestAsk:
         assert stored is not None
         assert any("UNIQUE::" in r.extracted_text for r in stored.sources.values())
 
+    def test_demo_article_source_is_flagged_so_the_ui_can_label_it(
+        self, client: TestClient
+    ) -> None:
+        """A backend-served demo article is marked as such, never implied pasted."""
+        body = ask(client)
+
+        demo = [s for s in body["sources"] if s["url"].startswith("/demo/articles/")]
+        others = [s for s in body["sources"] if not s["url"].startswith("/demo/articles/")]
+        assert len(demo) == 1
+        assert demo[0]["is_demo_article"] is True
+        assert others
+        assert all(s["is_demo_article"] is False for s in others)
+
+    def test_byo_sources_are_never_flagged_as_demo_articles(self, client: TestClient) -> None:
+        body = ask(client, urls=["https://a.org/1", "https://b.org/2", "https://c.org/3"])
+
+        assert all(s["is_demo_article"] is False for s in body["sources"])
+
     def test_byo_wrong_count_is_a_plain_400(self, client: TestClient) -> None:
         response = client.post(
             "/api/agent/ask", json={"question": "Q", "urls": ["https://a.org", "https://b.org"]}
@@ -315,6 +333,14 @@ class TestTopicsAndDebugSurfaces:
         assert "curated" in body["disclosure"]
         assert len(body["topics"]) == 4
         assert all(t["topic_id"] and t["title"] for t in body["topics"])
+
+    def test_every_topic_offers_a_distinct_default_question(self, client: TestClient) -> None:
+        """The UI prefills this question on topic selection; the user can edit it."""
+        body = client.get("/api/agent/topics").json()
+
+        questions = [t["default_question"] for t in body["topics"]]
+        assert all(q.strip().endswith("?") for q in questions)
+        assert len(set(questions)) == len(questions)
 
     def test_debug_payload_shows_the_last_request_body_in_dev(
         self, client: TestClient, llm: RecordingLlm

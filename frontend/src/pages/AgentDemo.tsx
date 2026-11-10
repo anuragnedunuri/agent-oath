@@ -9,16 +9,20 @@
  */
 
 import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import TrustSummaryCard from '../components/TrustSummaryCard';
 import type {
   AgentAnswerResponse,
   AgentAskResponse,
   AgentTopicsResponse,
+  AgentTopicSummary,
   LlmPayloadDebugResponse,
 } from '../types';
 
 const GATHER_TIMEOUT_MS = 180_000;
 const ANSWER_TIMEOUT_MS = 120_000;
+
+const DEMO_ARTICLE_LABEL = 'Demo article served by this prototype (AI-generated, disclosed)';
 
 type Mode = 'seed' | 'byo';
 
@@ -71,6 +75,16 @@ export default function AgentDemo() {
       .then((health) => setDevMode(health.app_env === 'dev'))
       .catch(() => setDevMode(false));
   }, []);
+
+  function selectTopic(topic: AgentTopicSummary) {
+    setTopicId(topic.topic_id);
+    // Prefill the default question, but never overwrite something the user
+    // typed themselves: only an empty box or another topic's untouched
+    // prefill is replaced.
+    const untouched =
+      question.trim() === '' || (topics?.topics ?? []).some((t) => t.default_question === question);
+    if (untouched) setQuestion(topic.default_question);
+  }
 
   const approvedCount = session
     ? session.sources.filter((source) => source.approved === true).length
@@ -230,7 +244,7 @@ export default function AgentDemo() {
                   key={topic.topic_id}
                   type="button"
                   className={`topic-chip ${topicId === topic.topic_id ? 'active' : ''}`}
-                  onClick={() => setTopicId(topic.topic_id)}
+                  onClick={() => selectTopic(topic)}
                 >
                   {topic.title}
                 </button>
@@ -290,7 +304,9 @@ export default function AgentDemo() {
                       ? 'Rejected'
                       : 'Awaiting your decision'}
                 </span>
-                <span className="agent-source-url">{source.url}</span>
+                <span className="agent-source-url">
+                  {source.is_demo_article ? DEMO_ARTICLE_LABEL : source.url}
+                </span>
                 <span className="agent-source-actions">
                   <button
                     type="button"
@@ -310,7 +326,10 @@ export default function AgentDemo() {
                   </button>
                 </span>
               </div>
-              <TrustSummaryCard summary={source.trust_summary} />
+              <TrustSummaryCard
+                summary={source.trust_summary}
+                subject={source.is_demo_article ? DEMO_ARTICLE_LABEL : undefined}
+              />
             </div>
           ))}
 
@@ -343,7 +362,9 @@ export default function AgentDemo() {
       {answer && answer.status === 'ok' && (
         <div className="answer-panel ok">
           <h3>Answer</h3>
-          <p className="answer-text">{answer.answer}</p>
+          <div className="answer-text">
+            <ReactMarkdown>{answer.answer}</ReactMarkdown>
+          </div>
           <h4>Sources used</h4>
           <ul className="attribution">
             {answer.sources_used.map((used) => (

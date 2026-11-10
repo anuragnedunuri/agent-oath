@@ -360,6 +360,14 @@ class AgentSourceView(BaseModel):
     source_id: str
     url: str
     approved: bool | None
+    is_demo_article: bool = Field(
+        default=False,
+        description=(
+            "True when this source is an AI-generated demo article served by "
+            "this backend, so the UI can label it as such instead of implying "
+            "it was pasted text."
+        ),
+    )
     trust_summary: TrustSummary
 
 
@@ -445,6 +453,10 @@ class AgentTopicSummary(BaseModel):
 
     topic_id: str
     title: str
+    default_question: str = Field(
+        min_length=1,
+        description="A sensible starter question the UI prefills; the user can edit it.",
+    )
 
 
 class AgentTopicsResponse(BaseModel):

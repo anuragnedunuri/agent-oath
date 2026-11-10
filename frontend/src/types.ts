@@ -140,6 +140,8 @@ export interface AgentSourceView {
   source_id: string;
   url: string;
   approved: boolean | null;
+  /** True for an AI-generated demo article served by this backend. */
+  is_demo_article: boolean;
   trust_summary: TrustSummary;
 }
 
@@ -167,6 +169,8 @@ export interface AgentAnswerResponse {
 export interface AgentTopicSummary {
   topic_id: string;
   title: string;
+  /** Prefilled into the question box on selection; the user can edit it. */
+  default_question: string;
 }
 
 export interface AgentTopicsResponse {

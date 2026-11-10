@@ -279,8 +279,16 @@ function CredibilityBlock({ credibility }: { credibility: CredibilityResult }) {
   );
 }
 
-export default function TrustSummaryCard({ summary }: { summary: TrustSummary }) {
-  const heading = summary.provenance.domain !== null ? summary.provenance.domain : 'Pasted text';
+export default function TrustSummaryCard({
+  summary,
+  subject,
+}: {
+  summary: TrustSummary;
+  /** Overrides the heading, e.g. for backend-served demo articles. */
+  subject?: string;
+}) {
+  const heading =
+    subject ?? (summary.provenance.domain !== null ? summary.provenance.domain : 'Pasted text');
 
   return (
     <article className="trust-card">

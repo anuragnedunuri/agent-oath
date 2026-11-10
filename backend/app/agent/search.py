@@ -51,6 +51,9 @@ class SeedTopic(BaseModel):
 
     topic_id: str
     title: str
+    default_question: str = Field(
+        description="A sensible starter question the UI prefills; editable by the user."
+    )
     urls: list[SeedUrl]
 
 

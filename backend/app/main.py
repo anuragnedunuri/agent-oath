@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse
 from .agent.answer import generate_answer, get_last_llm_payload
 from .agent.approval import get_session, record_answer_event, set_approval
 from .agent.search import (
+    DEMO_PATH_PREFIX,
     SEED_TOPICS_PATH,
     create_agent_session,
     demo_article_path,
@@ -98,7 +99,11 @@ def agent_topics() -> AgentTopicsResponse:
     return AgentTopicsResponse(
         disclosure=raw["disclosure"],
         topics=[
-            AgentTopicSummary(topic_id=topic.topic_id, title=topic.title)
+            AgentTopicSummary(
+                topic_id=topic.topic_id,
+                title=topic.title,
+                default_question=topic.default_question,
+            )
             for topic in load_seed_topics()
         ],
     )
@@ -151,6 +156,7 @@ def agent_ask(request: AgentAskRequest) -> AgentAskResponse:
                 source_id=record.source_id,
                 url=record.url,
                 approved=record.approved,
+                is_demo_article=record.url.startswith(DEMO_PATH_PREFIX),
                 trust_summary=record.trust_summary,
             )
             for record in session.sources.values()
